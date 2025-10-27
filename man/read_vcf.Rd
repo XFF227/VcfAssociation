@@ -17,8 +17,8 @@ read_vcf(vcf_path, samples = NULL, info_fields = NULL)
 A list with \code{$variants} and \code{$genotypes} data.frames.
 }
 \description{
-Read a VCF (.vcf or .vcf.gz) and return `variants` (one row per site)
-  and `genotypes` (long format: variant x sample) with computed dosage.
+Read a VCF (.vcf or .vcf.gz) and return \code{variants} (one row per site)
+and \code{genotypes} (long format: variant x sample) with computed dosage.
 }
 \details{
 read_vcf
