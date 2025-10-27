@@ -2,20 +2,31 @@
 % Please edit documentation in R/read_vcf.R
 \name{read_vcf}
 \alias{read_vcf}
-\title{Read a VCF (plain or bgz) into a tidy table}
+\title{Read a VCF file into tidy data frames}
 \usage{
-read_vcf(path)
+read_vcf(vcf_path, samples = NULL, info_fields = NULL)
 }
 \arguments{
-\item{path}{Path to .vcf or .vcf.gz}
+\item{vcf_path}{Path to VCF file.}
+
+\item{samples}{Optional character vector of sample IDs to subset.}
+
+\item{info_fields}{Optional character vector of INFO tags to keep.}
 }
 \value{
-data.frame with CHROM, POS, REF, ALT, SAMPLE, GT, DP, AD
+A list with \code{$variants} and \code{$genotypes} data.frames.
 }
 \description{
-Read a VCF (plain or bgz) into a tidy table
+Read a VCF (.vcf or .vcf.gz) and return `variants` (one row per site)
+  and `genotypes` (long format: variant x sample) with computed dosage.
+}
+\details{
+read_vcf
 }
 \examples{
-v <- read_vcf(system.file("extdata","toy.vcf", package="VcfAssociation"))
-head(v)
+\dontrun{
+v <- read_vcf("demo.vcf.gz")
+head(v$variants)
+head(v$genotypes)
+}
 }

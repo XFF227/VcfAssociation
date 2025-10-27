@@ -2,20 +2,38 @@
 % Please edit documentation in R/assoc_gene.R
 \name{assoc_gene}
 \alias{assoc_gene}
-\title{Simple gene-level logistic regression (toy)}
+\title{Associate a variant with a gene-level binary label}
 \usage{
-assoc_gene(var_df, pheno, gene)
+assoc_gene(
+  df,
+  gene_col = "gene_flag",
+  dosage = "Dosage",
+  covars = character(),
+  model = c("logistic", "firth")
+)
 }
 \arguments{
-\item{var_df}{annotated variant table}
+\item{df}{Data with gene_flag (0/1), dosage and covariates.}
 
-\item{pheno}{data.frame(SAMPLE, PHENO\link{, AGE, SEX})}
+\item{gene_col}{Column name of gene flag (0/1).}
 
-\item{gene}{character}
+\item{dosage}{Dosage column name.}
+
+\item{covars}{Optional covariate names.}
+
+\item{model}{"logistic" or "firth".}
 }
 \value{
-data.frame(term, beta, se, p)
+list(tidy, model)
 }
 \description{
-Simple gene-level logistic regression (toy)
+Model: Gene(+/-) ~ Variant + covariates using Logistic/Firth Logistic.
+}
+\details{
+assoc_gene
+}
+\examples{
+\dontrun{
+assoc_gene(df, gene_col="is_driver", dosage="Dosage", covars=c("age","sex"), model="logistic")
+}
 }
