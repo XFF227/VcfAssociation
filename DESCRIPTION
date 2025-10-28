@@ -1,36 +1,30 @@
 Package: VcfAssociation
-Title: VCF Reading, Annotation, Association, and Visualization
-Version: 0.0.1
-Authors@R: person("X Li", "xiaof.li@utoronto.ca", role = c("aut", "cre")
-Description: Read VCFs, merge phenotypes, annotate variants, run single-variant GWAS,
-    and perform single-variant/gene associations (GLM or Firth), with visualization.
+Title: VCF Association Workflow
+Version: 0.0.1.8000
+Authors@R: 
+    c(
+      person(given = "Xiaofeng", family = "Li",
+             email = "xiaof.li@utoronto.ca",
+             role = c("aut", "cre"))
+    )
+Description: Read small VCFs, merge phenotypes, annotate, run simple association,
+    and visualize results end-to-end for teaching/demo.
 License: MIT + file LICENSE
 Encoding: UTF-8
-LazyData: true
 Depends: R (>= 4.2)
 Imports:
-    stats,
     utils,
+    stats,
+    graphics,
+    grDevices,
     methods,
-    tibble,
-    dplyr,
-    tidyr,
-    readr,
-    ggplot2,
-    VariantAnnotation,
-    GenomicRanges,
-    GenomicFeatures,
-    GenomeInfoDb,
-    IRanges,
-    Biostrings,
-    SummarizedExperiment,
-    AnnotationDbi
+    ggplot2
 Suggests:
-    logistf,
+    testthat (>= 3.0.0),
     knitr,
     rmarkdown,
-    testthat (>= 3.0.0)
+    logistf
 VignetteBuilder: knitr
-Config/testthat/edition: 3
-RoxygenNote: 7.3.3
 Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.3.2
+

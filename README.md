@@ -1,18 +1,146 @@
----
-title: "VcfAssociation"
-output: github_document
----
 
 # VcfAssociation
-Title from DESCRIPTION.
 
 ## Description
-Purpose: Input VCF/phenotype files for association tests between variants/genes, output publishable figures (A3 Q1). Analyzes VCF (merged variant data for individuals), phenotypic CSV/TSV, optional covariates (age/sex; Q2). Improves: Integrates reading/annotation/analysis/visualization, reducing package switching; GWAS module for quick variant ID; model specific variant-phenotype or variant-driver gene associations (Q1). Unique: One-step QC/annotation/single-variant/gene-level tests vs separate vcfR/qqman/VariantAnnotation (Q3). Developed with R 4.3.0 on macOS (sessionInfo()). No Shiny.
+
+**VcfAssociation** is an R package designed to provide an integrated
+workflow for lightweight variant–phenotype association analysis.  
+It demonstrates the entire GWAS process—reading, annotation, modeling,
+and visualization—within one unified framework.
+
+Unlike existing packages (e.g., **vcfR**, **VariantAnnotation**,
+**qqman**), which handle isolated tasks, **VcfAssociation** integrates
+all essential steps for rapid and reproducible association testing.  
+This makes it ideal for teaching or small-scale exploratory projects.
+
+The package was developed under **R version 4.3.1 (2023-06-16)** on
+**macOS Ventura 13.x**, using **RStudio 2024.09**, and is compatible
+with Windows, macOS, and Linux.
 
 ## Installation
+
 To install the latest version of the package:
-```r
+
+``` r
 install.packages("devtools")
-library("devtools")
+library(devtools)
 devtools::install_github("XFF227/VcfAssociation", build_vignettes = TRUE)
-library("VcfAssociation")
+library(VcfAssociation)
+```
+
+## Overview
+
+The package provides end-to-end analysis from reading a VCF file to
+visualizing GWAS results.
+
+### User-accessible functions and their purposes
+
+| Function | Purpose |
+|----|----|
+| `read_vcf()` | Read and tidy a VCF file into a long-format data frame |
+| `read_phenotypes()` | Read phenotype CSV/TSV and merge with genotype data |
+| `annotate_variant()` | Annotate variants with gene and consequence information |
+| `generate_phenotype()` | Create a binary/continuous phenotype for a given variant site |
+| `gwas_single()` | Perform single-variant association test (GLM or logistic) |
+| `assoc_single()` | Fit model for one variant or feature |
+| `assoc_gene()` | Conduct gene-level aggregation test |
+| `assoc_viz()` | Visualize results using forest or Manhattan plots |
+
+### Example
+
+``` r
+library(VcfAssociation)
+
+vcf <- system.file("extdata", "mini.vcf", package = "VcfAssociation")
+ph  <- system.file("extdata", "mini_pheno.csv", package = "VcfAssociation")
+
+g   <- read_vcf(vcf)
+mrg <- read_phenotypes(pheno_path = ph, id_col = "sample", genotypes = g)
+ann <- annotate_variant(mrg$merged)
+fit <- gwas_single(ann, phenotypes = mrg$merged, id_col = "sample",
+                   pheno_col = "trait", covars = c("age","sex"),
+                   family = "binomial")
+
+# Visualization
+# p <- assoc_viz(fit$results, effect_scale = "OR")
+# print(p)
+```
+
+``` r
+ls("package:VcfAssociation")
+# data(package = "VcfAssociation")   # optional
+browseVignettes("VcfAssociation")
+```
+
+### Package Workflow Overview
+
+![](inst/extdata/overview.png)
+
+------------------------------------------------------------------------
+
+## Contributions
+
+**Author:** Xiaofeng Li (University of Toronto)
+
+- **Overall design and coding:** implemented all major modules,
+  including variant reading, phenotype merging, statistical analysis,
+  and visualization.  
+- **read_vcf()**, **read_phenotypes()**, **annotate_variant():**
+  implemented using base R and tidyverse syntax; referenced designs from
+  *vcfR* and *VariantAnnotation*.  
+- **gwas_single()**, **assoc_single()**, **assoc_gene():** implemented
+  using `glm()` and optionally `logistf()` for Firth logistic
+  regression.  
+- **assoc_viz():** implemented with `ggplot2` for forest and Manhattan
+  plots.  
+- **generate_phenotype():** added for automatically building binary
+  phenotype tables.  
+- **Data preparation:** created example datasets (`mini.vcf`,
+  `mini_pheno.csv`) for vignette demonstrations.
+
+**AI tools used:**  
+ChatGPT (OpenAI GPT-5, 2025) assisted with documentation structure, code
+style consistency, and README text formatting.  
+All functional logic, debugging, and testing were implemented and
+verified manually in RStudio.
+
+**External resources:**  
+- `vcfR` (Knaus & Grünwald, 2017) for basic VCF parsing design  
+- `VariantAnnotation` (Lawrence et al., 2013) for conceptual annotation
+workflow  
+- `qqman` (Turner, 2018) for visualization layout inspiration
+
+------------------------------------------------------------------------
+
+## References
+
+- Knaus, B. J., & Grünwald, N. J. (2017). *vcfR: a package to manipulate
+  and visualize VCF data in R.* *Molecular Ecology Resources*, 17(1),
+  44–53.  
+- Lawrence, M., et al. (2013). *Software for computing and annotating
+  genomic ranges.* *PLoS Computational Biology*, 9(8): e1003118.  
+- Turner, S. D. (2018). *qqman: an R package for visualizing GWAS
+  results using Q–Q and Manhattan plots.* *Journal of Open Source
+  Software*, 3(25), 731.  
+- Heinze, G., & Schemper, M. (2002). *A solution to the problem of
+  separation in logistic regression.* *Statistics in Medicine*, 21(16),
+  2409–2419.
+
+------------------------------------------------------------------------
+
+## Acknowledgements
+
+This package was developed as part of an assessment for the **2025
+BCB410H1F: Applied Bioinformatics** course at the **University of
+Toronto, Toronto, CANADA**.  
+**VcfAssociation** welcomes issues, enhancement requests, and other
+contributions.  
+To submit an issue, please use the GitHub Issues page.
+
+------------------------------------------------------------------------
+
+## Other Topics
+
+Future releases will add extended visualization options (e.g., QQ plots,
+volcano plots) and optimized workflows for larger VCF datasets through
+parallel computation.
