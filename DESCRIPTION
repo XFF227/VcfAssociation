@@ -30,17 +30,8 @@ Imports:
     rmarkdown
 Suggests:
 Remotes:
-    bioc::BiocGenerics,
-    bioc::S4Vectors,
-    bioc::IRanges,
-    bioc::GenomeInfoDb,
     bioc::GenomicRanges,
-    bioc::SummarizedExperiment,
-    bioc::VariantAnnotation,
-    bioc::Rsamtools,
-    bioc::Rhtslib,
-    bioc::UCSC.utils,
-    bioc::Seqinfo
+    bioc::VariantAnnotation
 SystemRequirements: Rtools (for Windows, when installing from source)
 Config/testthat/edition: 3
 VignetteBuilder: knitr

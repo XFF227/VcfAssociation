@@ -45,7 +45,7 @@ read_vcf <- function(vcf_file, samples = NULL, genome = NULL) {
   )
   
   variants <- data.frame(
-    CHROM = as.character(GenomeInfoDb::seqnames(rr)),
+    CHROM = as.character(GenomicRanges::seqnames(rr)),
     POS   = as.integer(GenomicRanges::start(rr)),
     REF   = as.character(VariantAnnotation::ref(vcf)),
     ALT   = ALT1,
