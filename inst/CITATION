@@ -1,11 +1,15 @@
-bibentry(
-  bibtype = "Article",
-  title = ,
-  author = ,
-  journal = ,
-  year = ,
-  volume = ,
-  number = ,
-  pages = ,
-  doi =
+citHeader("Please cite VcfAssociation and acknowledge the 1000 Genomes Project data.")
+
+citEntry(
+  entry = "Article",
+  title = "A global reference for human genetic variation",
+  author = personList(as.person("Adam Auton"), as.person("1000 Genomes Project Consortium")),
+  journal = "Nature",
+  year = "2015",
+  volume = "526",
+  pages  = "68--74",
+  doi = "10.1038/nature15393",
+  textVersion =
+    "Auton A, et al.; 1000 Genomes Project Consortium (2015).
+     A global reference for human genetic variation. Nature 526:68–74. doi:10.1038/nature15393."
 )

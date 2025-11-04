@@ -13,10 +13,10 @@ knitr::opts_chunk$set(
   comment = "#>"
 )
 knitr::opts_chunk$set(
-  fig.width  = 20,     
-  fig.height = 10, 
+  fig.width  = 10,     
+  fig.height = 7, 
   fig.align  = "center", 
-  dpi = 550,       
+  dpi = 350,       
   out.width = "70%"  
 )
 ```

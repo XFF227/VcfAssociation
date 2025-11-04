@@ -6,13 +6,6 @@
 #' @param by Named character vector mapping phenotype id to genotype id (default sample->sample).
 #' @return list(merged=data.frame, gaps=list(pheno_only, geno_only))
 #' @export
-#' @examples
-#' \dontrun{
-#' ph <- read_phenotypes("pheno.csv", id_col="sample_id", genotypes=v$genotypes,
-#'                       by=c("sample_id"="sample"))
-#' ph$gaps
-#' head(ph$merged)
-#' }
 read_phenotypes <- function(pheno_path, id_col = "sample", genotypes = NULL, by = c("sample" = "sample")) {
   if (!file.exists(pheno_path)) stop("Phenotype not found: ", pheno_path)
   ext <- tolower(tools::file_ext(pheno_path))

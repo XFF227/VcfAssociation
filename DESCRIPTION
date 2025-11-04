@@ -7,23 +7,28 @@ Authors@R:
              email = "xiaof.li@utoronto.ca",
              role = c("aut", "cre"))
     )
-Description: Read small VCFs, merge phenotypes, annotate, run simple association,
-    and visualize results end-to-end for teaching/demo.
+Description: Provides an end-to-end workflow from VCF and phenotype files 
+    to association analysis, and visualization (e.g., Manhattan 
+    and forest plots).
 License: MIT + file LICENSE
 Encoding: UTF-8
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.3.3
 Depends: R (>= 4.2)
 Imports:
-    utils,
+    GenomeInfoDb,
+    GenomicRanges,
+    SummarizedExperiment,
+    VariantAnnotation,
+    dplyr,
+    ggplot2,
+    readr,
     stats,
-    graphics,
-    grDevices,
-    methods,
-    ggplot2
+    tools
 Suggests:
     testthat (>= 3.0.0),
     knitr,
-    rmarkdown,
-    logistf
+    rmarkdown
+Config/testthat/edition: 3
 VignetteBuilder: knitr
-Roxygen: list(markdown = TRUE)
-RoxygenNote: 7.3.3
+LazyData: true

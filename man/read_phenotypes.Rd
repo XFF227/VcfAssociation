@@ -26,11 +26,3 @@ list(merged=data.frame, gaps=list(pheno_only, geno_only))
 \description{
 read_phenotypes
 }
-\examples{
-\dontrun{
-ph <- read_phenotypes("pheno.csv", id_col="sample_id", genotypes=v$genotypes,
-                      by=c("sample_id"="sample"))
-ph$gaps
-head(ph$merged)
-}
-}

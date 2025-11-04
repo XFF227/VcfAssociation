@@ -42,10 +42,3 @@ failed will be shown as hollow markers with a short error label (optional).
 \details{
 forest_plot
 }
-\examples{
-\dontrun{
-res <- build_model(df_list, outcomes="phenotype", model="logistic")
-p <- forest_plot(res, label_col="table_id", facet_col="outcome")
-print(p)
-}
-}

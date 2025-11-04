@@ -35,8 +35,3 @@ Extract a variant (chrom:pos) from VCF and output carrier/additive phenotype.
 \details{
 generate_phenotype
 }
-\examples{
-\dontrun{
-ph2 <- generate_phenotype("demo.vcf.gz", "1", 123456, model="carrier", out_csv="pheno_from_snp.csv")
-}
-}

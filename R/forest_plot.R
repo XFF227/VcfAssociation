@@ -18,12 +18,6 @@
 #' @param annotate_p Logical; whether to print p-values at the right side. Default TRUE.
 #' @return A \code{ggplot} object.
 #' @export
-#' @examples
-#' \dontrun{
-#' res <- build_model(df_list, outcomes="phenotype", model="logistic")
-#' p <- forest_plot(res, label_col="table_id", facet_col="outcome")
-#' print(p)
-#' }
 forest_plot <- function(res,
                                label_col = "table_id",
                                facet_col = "outcome",
