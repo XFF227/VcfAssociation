@@ -24,11 +24,11 @@ Imports:
     ggplot2,
     readr,
     stats,
-    tools
-Suggests:
+    tools,
     testthat (>= 3.0.0),
     knitr,
     rmarkdown
+Suggests:
 Config/testthat/edition: 3
 VignetteBuilder: knitr
 LazyData: true
