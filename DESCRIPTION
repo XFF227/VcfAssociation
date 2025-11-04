@@ -29,6 +29,12 @@ Imports:
     knitr,
     rmarkdown
 Suggests:
+Remotes:
+    bioc::GenomeInfoDb,
+    bioc::GenomicRanges,
+    bioc::SummarizedExperiment,
+    bioc::VariantAnnotation
+SystemRequirements: Rtools (for Windows, when installing from source)
 Config/testthat/edition: 3
 VignetteBuilder: knitr
 LazyData: true
