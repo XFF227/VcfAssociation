@@ -98,20 +98,23 @@ forest_plot <- function(res,
   # Valid rows: point + CI
   if (nrow(good) > 0) {
     p <- p +
-      ggplot2$geom_errorbarh(
+      ggplot2::geom_errorbar(
         color = "#1C65A3",
         data = good,
-        ggplot2$aes(y = .data$label, xmin = .data$lo, xmax = .data$hi),
-        height = 0.2, alpha = 0.7, na.rm = TRUE
+        ggplot2::aes(y = .data$label, xmin = .data$lo, xmax = .data$hi),
+        width = 0.2,                
+        alpha = 0.7,
+        na.rm = TRUE,
+        orientation = "y"          
       ) +
-      ggplot2$geom_point(
+      ggplot2::geom_point(
         color = "#1C65A3",
         data = good,
-        ggplot2$aes(y = .data$label, x = .data$effect),
-        size = 2.2, alpha = 0.9
+        ggplot2::aes(y = .data$label, x = .data$effect),
+        size = 2.2,
+        alpha = 0.9
       )
   }
-  
   # Invalid rows: hollow point at 0 with optional short error text
   if (nrow(bad) > 0) {
     p <- p +

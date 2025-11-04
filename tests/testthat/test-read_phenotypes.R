@@ -1,6 +1,4 @@
 # tests/testthat/test-read_phenotypes.R
-context("read_phenotypes")
-
 test_that("read_phenotypes correctly merges phenotype and genotype data", {
   vcf_path <- system.file("extdata", "toy.vcf", package = "VcfAssociation", mustWork = TRUE)
   geno_data <- read_vcf(vcf_path)$genotypes  # get genotype data frame from toy VCF

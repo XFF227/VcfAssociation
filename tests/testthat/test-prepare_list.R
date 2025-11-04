@@ -1,6 +1,4 @@
 # tests/testthat/test-prepare_list.R
-context("prepare_list")
-
 test_that("prepare_list splits merged data into list of variant-level data frames", {
   vcf_path <- system.file("extdata", "toy.vcf", package = "VcfAssociation", mustWork = TRUE)
   # Prepare a merged phenotype-genotype table using the toy data

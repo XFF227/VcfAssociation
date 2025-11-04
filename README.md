@@ -62,7 +62,7 @@ This package includes small example datasets derived from the 1000 Genomes Proje
 **Author:** Xiaofeng Li (University of Toronto)
 
 -   **Author’s Contributions:** implemented all major modules, including variant reading, phenotype merging, statistical analysis, and visualization. Write the code for all functions and their functionalities, along with descriptions for the devtool to compile into man pages. Download and process the code from the 1000 Genome Project to generate toy.vcf files for demonstrating and testing the functionality. Write a unitest for each function, debug it with AI assistance, and add appropriate comments for better understanding. Write vignettes containing the entire workflow to guide users through the usage process. Write this README and DESCRIPT.\
--   **read_vcf()**, **read_phenotypes():** implemented using **VariantAnnotation**, **SummarizedExperiment**, **GenomeInfoDb**, and **GenomicRanges** for VCF parsing and genomic data handling; combined with **dplyr** and **readr** for tidy data manipulation.
+-   **read_vcf()**, **read_phenotypes():** implemented using **VariantAnnotation**, **SummarizedExperiment** for VCF parsing and genomic data handling; combined with **dplyr** and **readr** for tidy data manipulation.
 -   **build_model():** implemented using **stats** functions (`glm()`, `confint()`, `qnorm()`) for logistic and linear regression modeling.
 -   **prepare_list():** implemented with base R operations to structure phenotype–variant data into a list format compatible with model building.
 -   **gwas_single():** implemented using **stats::glm()** for association testing and **dplyr** for data wrangling.
@@ -77,10 +77,6 @@ This package includes small example datasets derived from the 1000 Genomes Proje
 ## References
 
 -   **1000 Genome Project**: Auton A, et al. *A global reference for human genetic variation.* **Nature**. 2015;526:68–74. <doi:10.1038/nature15393>. \### References
-
--   **GenomeInfoDb**: Lawrence, M., & Morgan, M. (2019). *GenomeInfoDb: Utilities for manipulating chromosome names, including modifying them to follow a particular naming style.* R package version 1.x. Bioconductor. <https://bioconductor.org/packages/GenomeInfoDb>
-
--   **GenomicRanges**: Lawrence, M., Huber, W., Pagès, H., Aboyoun, P., Carlson, M., Gentleman, R., Morgan, M. T., & Carey, V. J. (2013). Software for computing and annotating genomic ranges. *PLoS Computational Biology*, 9(8), e1003118. <https://doi.org/10.1371/journal.pcbi.1003118>
 
 -   **SummarizedExperiment**: Morgan, M., Obenchain, V., Hester, J., & Pagès, H. (2023). *SummarizedExperiment: SummarizedExperiment container.* R package version 1.x. Bioconductor. <https://bioconductor.org/packages/SummarizedExperiment>
 

@@ -1,6 +1,4 @@
 # tests/testthat/test-gwas_single.R
-context("gwas_single")
-
 test_that("gwas_single returns per-variant association rows and expected fields", {
   vcf_path <- system.file("extdata", "toy.vcf", package = "VcfAssociation", mustWork = TRUE)
   

@@ -1,6 +1,4 @@
 # tests/testthat/test-read_vcf.R
-context("read_vcf")
-
 test_that("read_vcf reads VCF file and returns expected structure", {
   # Use the toy VCF file included in inst/extdata
   vcf_path <- system.file("extdata", "toy.vcf", package = "VcfAssociation", mustWork = TRUE)

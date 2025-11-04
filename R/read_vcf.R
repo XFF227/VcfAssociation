@@ -34,19 +34,13 @@ read_vcf <- function(vcf_file, samples = NULL, genome = NULL) {
   }
   
   # ---------- Variant table (GWAS essentials only) ----------
-  rr <- SummarizedExperiment::rowRanges(vcf)
+  rr_df <- as.data.frame(SummarizedExperiment::rowRanges(vcf))
   
-  # First ALT only (character), safe from CharacterList
-  alt_list <- VariantAnnotation::alt(vcf)
-  ALT1 <- vapply(
-    alt_list,
-    function(x) if (length(x) == 0) NA_character_ else as.character(x[[1]]),
-    character(1)
-  )
+  ALT1 <- vapply(VariantAnnotation::alt(vcf), function(x) paste0(as.character(x), collapse=","), character(1))
   
   variants <- data.frame(
-    CHROM = as.character(GenomicRanges::seqnames(rr)),
-    POS   = as.integer(GenomicRanges::start(rr)),
+    CHROM = as.character(rr_df$seqnames),
+    POS   = as.integer(rr_df$start),
     REF   = as.character(VariantAnnotation::ref(vcf)),
     ALT   = ALT1,
     stringsAsFactors = FALSE

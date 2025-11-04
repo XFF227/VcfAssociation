@@ -16,8 +16,6 @@ Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.3.3
 Depends: R (>= 4.4)
 Imports:
-    GenomeInfoDb,
-    GenomicRanges,
     SummarizedExperiment,
     VariantAnnotation,
     dplyr,
@@ -30,7 +28,6 @@ Imports:
     rmarkdown
 Suggests:
 Remotes:
-    bioc::GenomicRanges,
     bioc::VariantAnnotation
 SystemRequirements: Rtools (for Windows, when installing from source)
 Config/testthat/edition: 3

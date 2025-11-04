@@ -1,6 +1,3 @@
-# tests/testthat/test-forest_plot.R
-context("forest_plot")
-
 test_that("forest_plot returns a ggplot object for model summary data", {
   # Create a small dummy summary data frame (as if returned by build_model)
   res_df <- data.frame(

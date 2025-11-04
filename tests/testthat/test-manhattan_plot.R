@@ -1,6 +1,4 @@
 # tests/testthat/test-manhattan_plot.R
-context("manhattan_plot")
-
 test_that("manhattan_plot generates Manhattan plot with highlights and annotations", {
   # Simulate GWAS results for two chromosomes
   set.seed(100)

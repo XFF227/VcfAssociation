@@ -1,6 +1,3 @@
-# tests/testthat/test-generate_phenotype.R
-context("generate_phenotype")
-
 test_that("generate_phenotype extracts carrier/additive phenotypes correctly", {
   vcf_path <- system.file("extdata", "toy.vcf", package = "VcfAssociation", mustWork = TRUE)
   

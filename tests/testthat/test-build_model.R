@@ -1,6 +1,3 @@
-# tests/testthat/test-build_model.R
-context("build_model")
-
 test_that("build_model fits models and returns a summary data frame", {
   vcf_path <- system.file("extdata", "toy.vcf", package = "VcfAssociation", mustWork = TRUE)
   # Prepare a small df_list with two variants for testing
