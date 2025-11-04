@@ -2,31 +2,27 @@
 % Please edit documentation in R/read_vcf.R
 \name{read_vcf}
 \alias{read_vcf}
-\title{Read a VCF file into tidy data frames}
+\title{Read a VCF and return only GWAS-essential tables}
 \usage{
-read_vcf(vcf_path, samples = NULL, info_fields = NULL)
+read_vcf(vcf_file, samples = NULL, genome = NULL)
 }
 \arguments{
-\item{vcf_path}{Path to VCF file.}
+\item{vcf_file}{Path to .vcf or .vcf.gz}
 
-\item{samples}{Optional character vector of sample IDs to subset.}
+\item{samples}{Optional character vector of sample IDs to keep (subset)}
 
-\item{info_fields}{Optional character vector of INFO tags to keep.}
+\item{genome}{Optional genome string for VariantAnnotation::readVcf (e.g., "hg38")}
 }
 \value{
-A list with \code{$variants} and \code{$genotypes} data.frames.
+list(variants, genotypes)
+\itemize{
+\item variants: data.frame(CHROM, POS, REF, ALT)
+\item genotypes: data.frame(CHROM, POS, REF, ALT, sample, Dosage)
+}
 }
 \description{
-Read a VCF (.vcf or .vcf.gz) and return \code{variants} (one row per site)
-and \code{genotypes} (long format: variant x sample) with computed dosage.
-}
-\details{
-read_vcf
-}
-\examples{
-\dontrun{
-v <- read_vcf("demo.vcf.gz")
-head(v$variants)
-head(v$genotypes)
-}
+Minimal VCF reader for GWAS pipelines.
+Produces:
+(1) variant table with CHROM, POS, REF, ALT (no QUAL/FILTER/INFO),
+(2) long-format genotype table with per-sample ALT(1) dosage.
 }

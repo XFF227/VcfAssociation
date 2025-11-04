@@ -8,7 +8,7 @@ read_phenotypes(
   pheno_path,
   id_col = "sample",
   genotypes = NULL,
-  by = c(sample = "Sample")
+  by = c(sample = "sample")
 )
 }
 \arguments{
@@ -18,7 +18,7 @@ read_phenotypes(
 
 \item{genotypes}{Optional genotype long table from \code{read_vcf()}.}
 
-\item{by}{Named character vector mapping phenotype id to genotype id (default sample->Sample).}
+\item{by}{Named character vector mapping phenotype id to genotype id (default sample->sample).}
 }
 \value{
 list(merged=data.frame, gaps=list(pheno_only, geno_only))
@@ -29,7 +29,7 @@ read_phenotypes
 \examples{
 \dontrun{
 ph <- read_phenotypes("pheno.csv", id_col="sample_id", genotypes=v$genotypes,
-                      by=c("sample_id"="Sample"))
+                      by=c("sample_id"="sample"))
 ph$gaps
 head(ph$merged)
 }

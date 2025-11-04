@@ -12,8 +12,85 @@ knitr::opts_chunk$set(
   collapse = TRUE,
   comment = "#>"
 )
+knitr::opts_chunk$set(
+  fig.width  = 20,     
+  fig.height = 10, 
+  fig.align  = "center", 
+  dpi = 550,       
+  out.width = "70%"  
+)
 ```
 
 ```{r setup}
 library(VcfAssociation)
+```
+
+## Read VCF files
+
+User can read the input VCF file and generate genotype file by using "read_vcf()"
+
+```{r}
+vcf_path <- system.file("extdata", "toy.vcf", package = "VcfAssociation", mustWork = TRUE)
+vcf <- read_vcf(vcf_path)
+geno_data <- vcf$genotypes
+print(geno_data[201:205,])
+```
+
+Besides, variants information could also be extracted from this function
+
+```{r}
+variants <- vcf$variant
+head(variants, 5)
+```
+
+## Read Phenotype
+
+User could use "read_phenotypes()" function to read cvs file contain phenotypes and covariants then merged with genotype information to generate two lists, which merged is our merged data and gap is anydata which doesn't matched. The return format of this function is the input for other function in this package running. If user don't have a phenotype file, they could use "generate_phenotype()" function to generate readable phenotype .csv file for their interst mutation position or variant.
+
+```{r}
+pheno_df  <- generate_phenotype(vcf_path, chrom = "chr12", pos = 11161, model = "carrier")
+tmpfile <- tempfile(fileext = ".csv")
+write.csv(pheno_df, tmpfile, row.names = FALSE)
+ph <- read_phenotypes(tmpfile, id_col = "sample", genotypes = geno_data)
+print(ph$merged[16:20,])
+```
+
+## Build phenotype \~ variant model for interst genes
+
+### Step 1
+
+Using data format output by the "read_phenotype()" then using function "prepare_list()" to create a sublist from merged data only contain the interst variants
+
+```{r}
+variants_df <- unique(ph$merged[, c("CHROM", "POS")])[25:28, ]
+df_list_sel <- prepare_list(ph, variants = variants_df, phenotypes = "phenotype")
+```
+
+### Step 2
+
+Using "build_model()" function to build the model, then pass the result into "forest_plot()" to generate a forest plot to view.
+
+```{r}
+variant_assoc_result <- build_model(df_list_sel, outcomes = "phenotype", model = "logistic")
+fp <- forest_plot(variant_assoc_result, label_col = "table_id", facet_col = "phenotype", show_errors = TRUE)
+fp
+```
+
+## Run GAWS analyze phenotype \~ all variants
+
+### Step 1
+
+Using data format output by the "read_phenotype()" then using function "gwas_single()" and use default or set parameter to get GWAS result.
+
+```{r}
+result <- gwas_single(ph, pheno_col = "phenotype", covars = NULL, id_col = "sample") 
+```
+
+### Step 2
+
+Use data output by step 1 into "manhattan_plot()" to generate manhattan plot for GWAS results
+
+```{r}
+mp <- manhattan_plot(result)
+mp
 ```

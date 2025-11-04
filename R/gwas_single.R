@@ -1,67 +1,63 @@
 #' gwas_single
-#' @title Single-variant GWAS using GLM per site
-#' @description Fit GLM per variant with optional covariates; return results and Manhattan plot.
-#' @param genotypes Long genotype table from \code{read_vcf()}.
-#' @param phenotypes Phenotype data including id and trait.
-#' @param id_col Sample id column in \code{phenotypes}.
-#' @param pheno_col Phenotype column.
-#' @param covars Optional covariate column names.
-#' @param family "gaussian" (quantitative) or "binomial" (binary).
-#' @param p_adjust Method for \code{p.adjust}.
-#' @return list(results=data.frame, manhattan=ggplot)
+#' @title Single-variant regression using merged pheno+geno
+#' @description Accepts either a data.frame that's already merged OR the output of read_phenotypes().
+#' @param ph Either a data.frame (already merged) or the list returned by read_phenotypes().
+#' @param pheno_col Name of phenotype column in merged table.
+#' @param covars Optional character vector of covariate names in merged table.
+#' @param id_col Sample ID column name (should match what you used in read_phenotypes()).
+#' @return A data.frame with CHROM, POS, beta, se, and p values for the Dosage effect.
 #' @export
-#' @examples
-#' \dontrun{
-#' g <- v$genotypes
-#' ph <- readr::read_csv("pheno.csv")
-#' out <- gwas_single(g, ph, id_col="sample_id", pheno_col="trait", covars=c("age","sex"), family="binomial")
-#' out$manhattan
-#' dplyr::arrange(out$results, padj)[1:10,]
-#' }
-gwas_single <- function(genotypes, phenotypes, id_col, pheno_col,
-                        covars = character(), family = c("gaussian","binomial"),
-                        p_adjust = "BH") {
-  family <- match.arg(family)
-  stopifnot(is.data.frame(genotypes), is.data.frame(phenotypes))
-  if (!id_col %in% names(phenotypes)) stop("id_col not in phenotypes")
-  if (!pheno_col %in% names(phenotypes)) stop("pheno_col not in phenotypes")
+gwas_single <- function(ph,
+                        pheno_col = "phenotype",
+                        covars = NULL,
+                        id_col = "sample") {
+  # Standardize input to a merged data.frame
+  merged <- if (is.list(ph) && !is.null(ph$merged)) ph$merged else ph
+  if (!is.data.frame(merged)) stop("`ph` must be either a data.frame or a list with $merged from read_phenotypes().")
   
-  g_wide <- tidyr::pivot_wider(genotypes[, c("Sample","CHROM","POS","Dosage")],
-                               names_from = c("CHROM","POS"),
-                               values_from = "Dosage")
-  colnames(g_wide)[1] <- id_col
-  df <- dplyr::left_join(phenotypes, g_wide, by = id_col)
-  
-  var_cols <- setdiff(colnames(df), c(id_col, pheno_col, covars))
-  var_cols <- var_cols[grepl("^\\w+_\\d+$", var_cols)]
-  if (!length(var_cols)) stop("No variant dosage columns found.")
-  
-  fit_one <- function(vc) {
-    ftxt <- paste0(pheno_col, " ~ ", vc,
-                   if (length(covars)) paste0(" + ", paste(covars, collapse = " + ")) else "")
-    fm <- stats::as.formula(ftxt)
-    fit <- try(stats::glm(fm, data = df, family = if (family == "binomial") stats::binomial() else stats::gaussian()),
-               silent = TRUE)
-    if (inherits(fit, "try-error")) return(NULL)
-    co <- summary(fit)$coef
-    if (!vc %in% rownames(co)) return(NULL)
-    est <- co[vc, "Estimate"]; se <- co[vc, "Std. Error"]
-    p <- co[vc, if (family == "binomial") "Pr(>|z|)" else "Pr(>|t|)"]
-    tibble::tibble(CHROM = sub("_.*$", "", vc),
-                   POS   = as.integer(sub("^.*_", "", vc)),
-                   beta  = est, se = se, p = p)
+  # Resolve the sample column flexibly: prefer "sample", else use id_col
+  sample_col <- if ("sample" %in% names(merged)) "sample" else if (id_col %in% names(merged)) id_col else NA_character_
+  if (is.na(sample_col)) {
+    stop("Missing sample ID column: neither 'sample' nor '", id_col, "' is present in the merged table.")
   }
   
-  results <- dplyr::bind_rows(lapply(var_cols, fit_one))
-  if (!nrow(results)) stop("No models converged.")
-  results$padj <- p.adjust(results$p, method = p_adjust)
-  results$neglog10p <- -log10(results$p)
+  # Check required columns
+  req <- c("CHROM", "POS", sample_col, "Dosage", pheno_col)
+  miss <- setdiff(req, names(merged))
+  if (length(miss)) stop("Missing columns in merged table: ", paste(miss, collapse = ", "))
   
-  manh <- ggplot2::ggplot(results, ggplot2::aes(x = POS, y = neglog10p, color = CHROM)) +
-    ggplot2::geom_point(size = 0.6) +
-    ggplot2::facet_wrap(~CHROM, scales = "free_x") +
-    ggplot2::labs(x = "Position", y = "-log10(p)", title = "Single-variant GWAS") +
-    ggplot2::theme_bw()
+  # Choose regression family (binary -> binomial; else gaussian)
+  y <- merged[[pheno_col]]
+  fam <- if (is.numeric(y) && all(y %in% c(0, 1), na.rm = TRUE)) stats::binomial() else stats::gaussian()
   
-  list(results = as.data.frame(results), manhattan = manh)
+  # Build formula: phenotype ~ Dosage + covariates
+  rhs <- c("Dosage", covars)
+  fml <- stats::as.formula(paste(pheno_col, "~", paste(rhs, collapse = " + ")))
+  
+  if (!requireNamespace("dplyr", quietly = TRUE)) stop("Please install.packages('dplyr')")
+  if (!requireNamespace("purrr", quietly = TRUE)) stop("Please install.packages('purrr')")
+  
+  dplyr::group_by(merged, .data$CHROM, .data$POS) |>
+    dplyr::group_modify(~{
+      df <- .x
+      # Skip if no phenotype info or no dosage variation
+      if (all(is.na(df[[pheno_col]])) || length(unique(df$Dosage[!is.na(df$Dosage)])) < 2) {
+        return(dplyr::tibble(beta = NA_real_, se = NA_real_, p = NA_real_))
+      }
+      fit <- try(stats::glm(fml, data = df, family = fam), silent = TRUE)
+      if (inherits(fit, "try-error")) {
+        return(dplyr::tibble(beta = NA_real_, se = NA_real_, p = NA_real_))
+      }
+      sm <- summary(fit)$coefficients
+      if (!("Dosage" %in% rownames(sm))) {
+        return(dplyr::tibble(beta = NA_real_, se = NA_real_, p = NA_real_))
+      }
+      dplyr::tibble(
+        beta = unname(sm["Dosage", "Estimate"]),
+        se   = unname(sm["Dosage", "Std. Error"]),
+        p    = unname(sm["Dosage", if (fam$family == "binomial") "Pr(>|z|)" else "Pr(>|t|)"])
+      )
+    }) |>
+    dplyr::ungroup() |>
+    dplyr::arrange(.data$CHROM, .data$POS)
 }

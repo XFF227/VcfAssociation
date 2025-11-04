@@ -3,17 +3,17 @@
 #' @param pheno_path CSV/TSV path.
 #' @param id_col Sample ID column name in phenotype file.
 #' @param genotypes Optional genotype long table from \code{read_vcf()}.
-#' @param by Named character vector mapping phenotype id to genotype id (default sample->Sample).
+#' @param by Named character vector mapping phenotype id to genotype id (default sample->sample).
 #' @return list(merged=data.frame, gaps=list(pheno_only, geno_only))
 #' @export
 #' @examples
 #' \dontrun{
 #' ph <- read_phenotypes("pheno.csv", id_col="sample_id", genotypes=v$genotypes,
-#'                       by=c("sample_id"="Sample"))
+#'                       by=c("sample_id"="sample"))
 #' ph$gaps
 #' head(ph$merged)
 #' }
-read_phenotypes <- function(pheno_path, id_col = "sample", genotypes = NULL, by = c("sample" = "Sample")) {
+read_phenotypes <- function(pheno_path, id_col = "sample", genotypes = NULL, by = c("sample" = "sample")) {
   if (!file.exists(pheno_path)) stop("Phenotype not found: ", pheno_path)
   ext <- tolower(tools::file_ext(pheno_path))
   df <- if (ext %in% c("tsv","txt")) readr::read_tsv(pheno_path, show_col_types = FALSE) else readr::read_csv(pheno_path, show_col_types = FALSE)

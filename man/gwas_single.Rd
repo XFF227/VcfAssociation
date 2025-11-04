@@ -2,48 +2,25 @@
 % Please edit documentation in R/gwas_single.R
 \name{gwas_single}
 \alias{gwas_single}
-\title{Single-variant GWAS using GLM per site}
+\title{Single-variant regression using merged pheno+geno}
 \usage{
-gwas_single(
-  genotypes,
-  phenotypes,
-  id_col,
-  pheno_col,
-  covars = character(),
-  family = c("gaussian", "binomial"),
-  p_adjust = "BH"
-)
+gwas_single(ph, pheno_col = "phenotype", covars = NULL, id_col = "sample")
 }
 \arguments{
-\item{genotypes}{Long genotype table from \code{read_vcf()}.}
+\item{ph}{Either a data.frame (already merged) or the list returned by read_phenotypes().}
 
-\item{phenotypes}{Phenotype data including id and trait.}
+\item{pheno_col}{Name of phenotype column in merged table.}
 
-\item{id_col}{Sample id column in \code{phenotypes}.}
+\item{covars}{Optional character vector of covariate names in merged table.}
 
-\item{pheno_col}{Phenotype column.}
-
-\item{covars}{Optional covariate column names.}
-
-\item{family}{"gaussian" (quantitative) or "binomial" (binary).}
-
-\item{p_adjust}{Method for \code{p.adjust}.}
+\item{id_col}{Sample ID column name (should match what you used in read_phenotypes()).}
 }
 \value{
-list(results=data.frame, manhattan=ggplot)
+A data.frame with CHROM, POS, beta, se, and p values for the Dosage effect.
 }
 \description{
-Fit GLM per variant with optional covariates; return results and Manhattan plot.
+Accepts either a data.frame that's already merged OR the output of read_phenotypes().
 }
 \details{
 gwas_single
-}
-\examples{
-\dontrun{
-g <- v$genotypes
-ph <- readr::read_csv("pheno.csv")
-out <- gwas_single(g, ph, id_col="sample_id", pheno_col="trait", covars=c("age","sex"), family="binomial")
-out$manhattan
-dplyr::arrange(out$results, padj)[1:10,]
-}
 }

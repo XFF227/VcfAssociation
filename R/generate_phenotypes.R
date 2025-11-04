@@ -18,11 +18,11 @@ generate_phenotype <- function(vcf_path, chrom, pos, model = c("carrier","additi
   model <- match.arg(model)
   dat <- read_vcf(vcf_path)
   g <- dat$genotypes
-  sub <- g[g$CHROM == chrom & g$POS == pos, c("Sample","Dosage")]
+  sub <- g[g$CHROM == chrom & g$POS == pos, c("sample","Dosage")]
   if (!nrow(sub)) stop("Variant not found: ", chrom, ":", pos)
   
   phenotype <- if (model == "carrier") as.integer(sub$Dosage > 0L) else as.integer(sub$Dosage)
-  res <- stats::setNames(data.frame(sub$Sample, phenotype, check.names = FALSE),
+  res <- stats::setNames(data.frame(sub$sample, phenotype, check.names = FALSE),
                          c(sample_col, "phenotype"))
   if (!is.null(out_csv)) readr::write_csv(res, out_csv)
   res
