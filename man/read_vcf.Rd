@@ -2,7 +2,7 @@
 % Please edit documentation in R/read_vcf.R
 \name{read_vcf}
 \alias{read_vcf}
-\title{Read a VCF and return only GWAS-essential tables}
+\title{Read a VCF and return a genotype and variants tables}
 \usage{
 read_vcf(vcf_file, samples = NULL, genome = NULL)
 }
@@ -11,7 +11,7 @@ read_vcf(vcf_file, samples = NULL, genome = NULL)
 
 \item{samples}{Optional character vector of sample IDs to keep (subset)}
 
-\item{genome}{Optional genome string for VariantAnnotation::readVcf (e.g., "hg38")}
+\item{genome}{Ignored (kept for API compatibility)}
 }
 \value{
 list(variants, genotypes)
@@ -21,7 +21,7 @@ list(variants, genotypes)
 }
 }
 \description{
-Minimal VCF reader for GWAS pipelines.
+Minimal VCF reader for GWAS pipelines using the vcfR package (no Bioconductor).
 Produces:
 (1) variant table with CHROM, POS, REF, ALT (no QUAL/FILTER/INFO),
 (2) long-format genotype table with per-sample ALT(1) dosage.

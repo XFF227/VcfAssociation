@@ -16,8 +16,7 @@ Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.3.3
 Depends: R (>= 4.4)
 Imports:
-    SummarizedExperiment,
-    VariantAnnotation,
+    vcfR,
     dplyr,
     ggplot2,
     readr,
@@ -27,8 +26,6 @@ Imports:
     knitr,
     rmarkdown
 Suggests:
-Remotes:
-    bioc::VariantAnnotation
 SystemRequirements: Rtools (for Windows, when installing from source)
 Config/testthat/edition: 3
 VignetteBuilder: knitr

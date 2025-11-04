@@ -62,7 +62,7 @@ This package includes small example datasets derived from the 1000 Genomes Proje
 **Author:** Xiaofeng Li (University of Toronto)
 
 -   **Author’s Contributions:** implemented all major modules, including variant reading, phenotype merging, statistical analysis, and visualization. Write the code for all functions and their functionalities, along with descriptions for the devtool to compile into man pages. Download and process the code from the 1000 Genome Project to generate toy.vcf files for demonstrating and testing the functionality. Write a unitest for each function, debug it with AI assistance, and add appropriate comments for better understanding. Write vignettes containing the entire workflow to guide users through the usage process. Write this README and DESCRIPT.\
--   **read_vcf()**, **read_phenotypes():** implemented using **VariantAnnotation**, **SummarizedExperiment** for VCF parsing and genomic data handling; combined with **dplyr** and **readr** for tidy data manipulation.
+-   **read_vcf()**, **read_phenotypes():** implemented using **vcfR** for VCF parsing and genomic data handling; combined with **dplyr** and **readr** for tidy data manipulation.
 -   **build_model():** implemented using **stats** functions (`glm()`, `confint()`, `qnorm()`) for logistic and linear regression modeling.
 -   **prepare_list():** implemented with base R operations to structure phenotype–variant data into a list format compatible with model building.
 -   **gwas_single():** implemented using **stats::glm()** for association testing and **dplyr** for data wrangling.
@@ -78,9 +78,7 @@ This package includes small example datasets derived from the 1000 Genomes Proje
 
 -   **1000 Genome Project**: Auton A, et al. *A global reference for human genetic variation.* **Nature**. 2015;526:68–74. <doi:10.1038/nature15393>. \### References
 
--   **SummarizedExperiment**: Morgan, M., Obenchain, V., Hester, J., & Pagès, H. (2023). *SummarizedExperiment: SummarizedExperiment container.* R package version 1.x. Bioconductor. <https://bioconductor.org/packages/SummarizedExperiment>
-
--   **VariantAnnotation**: Obenchain, V., Lawrence, M., Carey, V., Gogarten, S., Shannon, P., & Morgan, M. (2014). VariantAnnotation: a Bioconductor package for exploration and annotation of genetic variants. *Bioinformatics*, 30(14), 2076–2078. <https://doi.org/10.1093/bioinformatics/btu168>
+-   **vcfR**: Knaus, Brian J.; Grünwald, Niklaus J. (2017). vcfR: a package to manipulate and visualize variant call format data in R. Molecular Ecology Resources 17(1): 44-53. <http://dx.doi.org/10.1111/1755-0998.12549>
 
 -   **dplyr**: Wickham, H., François, R., Henry, L., & Müller, K. (2023). *dplyr: A Grammar of Data Manipulation.* R package version 1.x. <https://CRAN.R-project.org/package=dplyr>
 
