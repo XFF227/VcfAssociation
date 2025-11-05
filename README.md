@@ -99,14 +99,15 @@ Genomes Project for demonstration only, in inst/extdata/toy.vcf
   for visualization and **dplyr** for summarizing model outputs.
 - **generate_phenotypes():** implemented with **readr** for writing
   phenotype tables and **stats::setNames()** for column naming.
-- **Data preparation:** example datasets toy.vcf 
-  were created for vignette demonstrations and workflow testing.
+- **Data preparation:** example datasets toy.vcf were created for
+  vignette demonstrations and workflow testing.
 - **devtools** is used for generate document structure
 - **AI tools used:** ChatGPT (OpenAI GPT-5, 2025) assisted with
   documentation structure, understanding external package usage, and
   README text formatting. It also be used when implement function
-  read_vcf() for debugging and understand external package usage. It be used for generate comment in function
-  documents help other people to know the logic.
+  read_vcf() for debugging and understand external package usage. It be
+  used for generate comment in function documents help other people to
+  know the logic.
 
 ------------------------------------------------------------------------
 
@@ -114,7 +115,7 @@ Genomes Project for demonstration only, in inst/extdata/toy.vcf
 
 - **1000 Genome Project**: Auton A, et al. *A global reference for human
   genetic variation.* **Nature**. 2015;526:68–74.
-  <doi:10.1038/nature15393>. \### References
+  <doi:10.1038/nature15393>.
 
 - **vcfR**: Knaus, Brian J.; Grünwald, Niklaus J. (2017). vcfR: a
   package to manipulate and visualize variant call format data in R.
