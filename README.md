@@ -106,8 +106,8 @@ Genomes Project for demonstration only, in inst/extdata/toy.vcf
   documentation structure, understanding external package usage, and
   README text formatting. It also be used when implement function
   read_vcf() for debugging and understand external package usage. It be
-  used for generate comment in function documents help other people to
-  know the logic.
+  used for generate some comments within the function help other people
+  to know the logic.
 
 ------------------------------------------------------------------------
 
