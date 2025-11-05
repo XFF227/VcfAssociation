@@ -99,14 +99,13 @@ Genomes Project for demonstration only, in inst/extdata/toy.vcf
   for visualization and **dplyr** for summarizing model outputs.
 - **generate_phenotypes():** implemented with **readr** for writing
   phenotype tables and **stats::setNames()** for column naming.
-- **Data preparation:** example datasets (`mini.vcf`, `mini_pheno.csv`)
+- **Data preparation:** example datasets toy.vcf 
   were created for vignette demonstrations and workflow testing.
 - **devtools** is used for generate document structure
 - **AI tools used:** ChatGPT (OpenAI GPT-5, 2025) assisted with
   documentation structure, understanding external package usage, and
   README text formatting. It also be used when implement function
-  read_vcf() for debugging and understand external package usage like
-  VariantAnnotation. It be used for generate comment in function
+  read_vcf() for debugging and understand external package usage. It be used for generate comment in function
   documents help other people to know the logic.
 
 ------------------------------------------------------------------------
