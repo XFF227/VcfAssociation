@@ -2,7 +2,7 @@
 % Please edit documentation in R/forest_plot.R
 \name{forest_plot}
 \alias{forest_plot}
-\title{Forest plot for build_model() results (robust to NA / no-variation cases)}
+\title{Create a forest plot of effect sizes}
 \usage{
 forest_plot(
   res,
@@ -13,32 +13,51 @@ forest_plot(
 )
 }
 \arguments{
-\item{res}{Data frame returned by \code{build_model()} (one row per result).}
+\item{res}{Data frame returned by build_model().}
 
-\item{label_col}{Column used for y-axis labels (default: "table_id").}
+\item{label_col}{Column used for y-axis labels.}
 
-\item{facet_col}{Optional column to facet by (e.g., "outcome" or "model"). Use \code{NULL} for no facet.}
+\item{facet_col}{Optional column to group results.}
 
-\item{show_errors}{Logical; whether to display short error text for invalid rows. Default TRUE.}
+\item{show_errors}{Whether to display errors for failed fits.}
 
-\item{annotate_p}{Logical; whether to print p-values at the right side. Default TRUE.}
+\item{annotate_p}{Whether to label p-values next to estimates.}
 }
 \value{
-A \code{ggplot} object.
+A ggplot object showing the forest plot.
 }
 \description{
-Draw a forest plot from the tidy summary returned by \code{build_model()}.
-Handles both linear and (Firth) logistic models in one figure by plotting
-\strong{effects on a common scale}:
-\itemize{
-\item Linear models: use \code{beta} and its CI.
-\item Logistic/Firth: use \code{log(OR)} and \code{log(CI)} so that 0 is the
-null line for all panels.
-}
-
-Rows where the dosage term is missing (e.g., no genotype variation) or a fit
-failed will be shown as hollow markers with a short error label (optional).
+This function visualizes model results from build_model() as a forest plot.
+Each row represents a variant or region, showing its estimated effect size
+and confidence interval. It helps interpret the strength and direction
+of associations across multiple loci.
 }
 \details{
 forest_plot
+}
+\examples{
+vcf_path <- system.file("extdata", "toy.vcf",
+                        package = "VcfAssociation", mustWork = TRUE)
+vcf <- read_vcf(vcf_path)
+ph <- generate_phenotype(vcf_path,
+                         chrom = "chr12", pos = 11161,
+                         model = "carrier")
+tmp <- tempfile(fileext = ".csv")
+write.csv(ph, tmp, row.names = FALSE)
+ph_list <- read_phenotypes(tmp, id_col = "sample", genotypes = vcf$genotypes)
+variants <- data.frame(CHROM = "chr12", POS = c(10537, 12180, 12372))
+df_list <- prepare_list(ph_list, variants, phenotypes = "phenotype")
+res <- build_model(df_list, outcomes = "phenotype", model = "logistic")
+forest_plot(res)
+}
+\references{
+\strong{ggplot2}: Wickham, H. (2016). \emph{ggplot2: Elegant Graphics for Data Analysis.}
+Springer-Verlag New York. \url{https://ggplot2.tidyverse.org}
+
+\strong{dplyr}: Wickham, H., François, R., Henry, L., & Müller, K. (2023).
+\emph{dplyr: A Grammar of Data Manipulation.} R package version 1.x.
+\url{https://CRAN.R-project.org/package=dplyr}
+}
+\seealso{
+build_model
 }

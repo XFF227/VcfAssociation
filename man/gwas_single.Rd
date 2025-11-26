@@ -2,25 +2,57 @@
 % Please edit documentation in R/gwas_single.R
 \name{gwas_single}
 \alias{gwas_single}
-\title{Single-variant regression using merged pheno+geno}
+\title{Perform single-variant association tests}
 \usage{
 gwas_single(ph, pheno_col = "phenotype", covars = NULL, id_col = "sample")
 }
 \arguments{
-\item{ph}{Either a data.frame (already merged) or the list returned by read_phenotypes().}
+\item{ph}{Merged data frame or list from read_phenotypes().}
 
-\item{pheno_col}{Name of phenotype column in merged table.}
+\item{pheno_col}{Name of the phenotype column.}
 
-\item{covars}{Optional character vector of covariate names in merged table.}
+\item{covars}{Optional character vector of covariate names.}
 
-\item{id_col}{Sample ID column name (should match what you used in read_phenotypes()).}
+\item{id_col}{Sample ID column name.}
 }
 \value{
-A data.frame with CHROM, POS, beta, se, and p values for the Dosage effect.
+A data frame with CHROM, POS, beta, standard error, and p-value.
 }
 \description{
-Accepts either a data.frame that's already merged OR the output of read_phenotypes().
+This function runs the core GWAS step in the pipeline. Using the merged
+phenotype–genotype table from read_phenotypes(), it performs a regression
+test for each variant. The phenotype is modeled as a function of genotype
+dosage and optional covariates.
+
+Binary phenotypes use logistic regression; continuous phenotypes use linear
+regression. The output includes per-variant effect size, standard error, and
+p-value, suitable for visualization with manhattan_plot().
 }
 \details{
 gwas_single
+}
+\examples{
+vcf_path <- system.file("extdata", "toy.vcf",
+                        package = "VcfAssociation", mustWork = TRUE)
+vcf <- read_vcf(vcf_path)
+ph <- generate_phenotype(vcf_path,
+                         chrom = "chr12", pos = 11161,
+                         model = "carrier")
+tmp <- tempfile(fileext = ".csv")
+write.csv(ph, tmp, row.names = FALSE)
+ph_list <- read_phenotypes(tmp, id_col = "sample", genotypes = vcf$genotypes)
+gwas_res <- gwas_single(ph_list, pheno_col = "phenotype")
+head(gwas_res)
+}
+\references{
+\strong{stats}: R Core Team. (2025). \emph{R: A Language and Environment for Statistical Computing.}
+R Foundation for Statistical Computing, Vienna, Austria.
+\url{https://www.R-project.org/}
+
+\strong{dplyr}: Wickham, H., François, R., Henry, L., & Müller, K. (2023).
+\emph{dplyr: A Grammar of Data Manipulation.} R package version 1.x.
+\url{https://CRAN.R-project.org/package=dplyr}
+}
+\seealso{
+manhattan_plot
 }

@@ -2,7 +2,7 @@
 % Please edit documentation in R/manhattan_plot.R
 \name{manhattan_plot}
 \alias{manhattan_plot}
-\title{Draw a Manhattan plot from single-variant results}
+\title{Create a Manhattan plot from GWAS results}
 \usage{
 manhattan_plot(
   df,
@@ -17,30 +17,57 @@ manhattan_plot(
 )
 }
 \arguments{
-\item{df}{Data frame containing GWAS results (must have CHROM, POS, p).}
+\item{df}{Data frame of GWAS results.}
 
-\item{chr_col}{Column name for chromosome. Default "CHROM".}
+\item{chr_col}{Column name for chromosome (default "CHROM").}
 
-\item{pos_col}{Column name for 1-based position. Default "POS".}
+\item{pos_col}{Column name for position (default "POS").}
 
-\item{p_col}{Column name for p-values. Default "p".}
+\item{p_col}{Column name for p-values (default "p").}
 
-\item{genome_wide}{Genome-wide significance threshold (drawn as red line). Default 5e-8 (NULL to disable).}
+\item{genome_wide}{Optional genome-wide significance threshold.}
 
-\item{suggestive}{Suggestive threshold (drawn as dashed line). Default 1e-5 (NULL to disable).}
+\item{suggestive}{Optional suggestive threshold.}
 
-\item{highlight_snps}{Optional character vector of SNP IDs to highlight (requires snp_col not NULL).}
+\item{highlight_snps}{Optional vector of variant IDs to highlight.}
 
-\item{snp_col}{Column name of SNP ID if you want to highlight/annotate. Default NULL.}
+\item{snp_col}{Column name for variant IDs.}
 
-\item{annotate_top_n}{Integer; annotate top-N most significant points (by p). Default 0.}
+\item{annotate_top_n}{Number of top hits to label.}
 }
 \value{
-A ggplot object.
+A ggplot object representing the Manhattan plot.
 }
 \description{
-Expects a data.frame with at least CHROM, POS, and p columns.
+This function generates a Manhattan plot from a GWAS result table, such as the
+output of gwas_single(). It displays genomic position on the x-axis and
+-log10(p-value) on the y-axis. Genome-wide and suggestive significance thresholds
+can be visualized, and top hits can be labeled or highlighted.
 }
 \details{
 manhattan_plot
+}
+\examples{
+vcf_path <- system.file("extdata", "toy.vcf",
+                        package = "VcfAssociation", mustWork = TRUE)
+vcf <- read_vcf(vcf_path)
+ph <- generate_phenotype(vcf_path,
+                         chrom = "chr12", pos = 11161,
+                         model = "carrier")
+tmp <- tempfile(fileext = ".csv")
+write.csv(ph, tmp, row.names = FALSE)
+ph_list <- read_phenotypes(tmp, id_col = "sample", genotypes = vcf$genotypes)
+gwas_res <- gwas_single(ph_list, pheno_col = "phenotype")
+manhattan_plot(gwas_res)
+}
+\references{
+\strong{ggplot2}: Wickham, H. (2016). \emph{ggplot2: Elegant Graphics for Data Analysis.}
+Springer-Verlag New York. \url{https://ggplot2.tidyverse.org}
+
+\strong{dplyr}: Wickham, H., François, R., Henry, L., & Müller, K. (2023).
+\emph{dplyr: A Grammar of Data Manipulation.} R package version 1.x.
+\url{https://CRAN.R-project.org/package=dplyr}
+}
+\seealso{
+gwas_single
 }

@@ -2,27 +2,51 @@
 % Please edit documentation in R/read_vcf.R
 \name{read_vcf}
 \alias{read_vcf}
-\title{Read a VCF and return a genotype and variants tables}
+\title{Read and parse annotated VCF files for association analysis}
 \usage{
 read_vcf(vcf_file, samples = NULL, genome = NULL)
 }
 \arguments{
-\item{vcf_file}{Path to .vcf or .vcf.gz}
+\item{vcf_file}{Path to the annotated VCF file (.vcf or .vcf.gz).}
 
-\item{samples}{Optional character vector of sample IDs to keep (subset)}
+\item{samples}{Optional character vector of sample IDs to retain.}
 
-\item{genome}{Ignored (kept for API compatibility)}
+\item{genome}{Optional genome build name (not used internally, kept for compatibility).}
 }
 \value{
-list(variants, genotypes)
+A list containing:
 \itemize{
-\item variants: data.frame(CHROM, POS, REF, ALT)
-\item genotypes: data.frame(CHROM, POS, REF, ALT, sample, Dosage)
+\item variants: data frame with CHROM, POS, REF, and ALT.
+\item genotypes: long-format data frame with per-sample Dosage values.
 }
 }
 \description{
-Minimal VCF reader for GWAS pipelines using the vcfR package (no Bioconductor).
-Produces:
-(1) variant table with CHROM, POS, REF, ALT (no QUAL/FILTER/INFO),
-(2) long-format genotype table with per-sample ALT(1) dosage.
+This function is the first step in the pipeline. It reads an annotated VCF file
+and extracts two key tables:
+\enumerate{
+\item a variant table with basic variant information (CHROM, POS, REF, ALT),
+\item a genotype table in long format with ALT-allele dosage for each sample.
+}
+
+These tables form the foundation for all downstream steps, such as
+generating phenotypes and merging genotype–phenotype data.
+}
+\details{
+read_vcf
+}
+\examples{
+vcf_path <- system.file("extdata", "toy.vcf",
+                        package = "VcfAssociation", mustWork = TRUE)
+vcf <- read_vcf(vcf_path)
+head(vcf$variants)
+head(vcf$genotypes)
+}
+\references{
+\strong{vcfR}: Knaus, Brian J.; Grünwald, Niklaus J. (2017).
+vcfR: a package to manipulate and visualize variant call format data in R.
+\emph{Molecular Ecology Resources} 17(1): 44–53.
+\url{http://dx.doi.org/10.1111/1755-0998.12549}
+}
+\seealso{
+generate_phenotype, read_phenotypes
 }

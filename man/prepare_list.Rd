@@ -2,7 +2,7 @@
 % Please edit documentation in R/prepare_list.R
 \name{prepare_list}
 \alias{prepare_list}
-\title{Prepare df_list input for build_model() from read_phenotypes() output}
+\title{Prepare per-variant data sets for joint modeling}
 \usage{
 prepare_list(
   ph,
@@ -16,28 +16,53 @@ prepare_list(
 )
 }
 \arguments{
-\item{ph}{The list returned by read_phenotypes()}
+\item{ph}{Output list from read_phenotypes().}
 
-\item{variants}{data.frame with CHROM, POS; if NULL, returns one element with all rows}
+\item{variants}{Optional data frame specifying CHROM and POS of variants to include.}
 
-\item{phenotypes}{character vector of phenotype column names}
+\item{phenotypes}{Character vector of phenotype columns to include.}
 
-\item{covars}{optional covariate names}
+\item{covars}{Optional covariate columns.}
 
-\item{dosage_col}{dosage column name (default "Dosage")}
+\item{dosage_col}{Name of dosage column.}
 
-\item{chrom_col}{chromosome column name (default "CHROM")}
+\item{chrom_col}{Name of chromosome column.}
 
-\item{pos_col}{position column name (default "POS")}
+\item{pos_col}{Name of position column.}
 
-\item{id_col}{sample id column name (default "sample")}
+\item{id_col}{Name of sample ID column.}
 }
 \value{
-named list of data.frames
+A named list of data frames, one per variant.
 }
 \description{
-Extract one or multiple variant-level data.frames from ph$merged
+This function splits the merged phenotype–genotype data from read_phenotypes()
+into smaller data frames, each representing one variant. Each sub-data frame
+includes genotype dosage, phenotypes, covariates, and sample IDs.
+The result is a list used by build_model() for gene- or region-level tests.
 }
 \details{
 prepare_list
+}
+\examples{
+vcf_path <- system.file("extdata", "toy.vcf",
+                        package = "VcfAssociation", mustWork = TRUE)
+vcf <- read_vcf(vcf_path)
+ph <- generate_phenotype(vcf_path,
+                         chrom = "chr12", pos = 11161,
+                         model = "carrier")
+tmp <- tempfile(fileext = ".csv")
+write.csv(ph, tmp, row.names = FALSE)
+ph_list <- read_phenotypes(tmp, id_col = "sample", genotypes = vcf$genotypes)
+variants <- data.frame(CHROM = "chr12", POS = c(10537, 12180))
+df_list <- prepare_list(ph_list, variants, phenotypes = "phenotype")
+names(df_list)
+}
+\references{
+\strong{dplyr}: Wickham, H., François, R., Henry, L., & Müller, K. (2023).
+\emph{dplyr: A Grammar of Data Manipulation.} R package version 1.x.
+\url{https://CRAN.R-project.org/package=dplyr}
+}
+\seealso{
+build_model
 }

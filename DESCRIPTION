@@ -16,6 +16,8 @@ Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.3.3
 Depends: R (>= 4.3)
 Imports:
+    shiny,
+    logistf,
     vcfR,
     dplyr,
     ggplot2,

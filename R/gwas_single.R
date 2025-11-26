@@ -1,11 +1,44 @@
 #' gwas_single
-#' @title Single-variant regression using merged pheno+geno
-#' @description Accepts either a data.frame that's already merged OR the output of read_phenotypes().
-#' @param ph Either a data.frame (already merged) or the list returned by read_phenotypes().
-#' @param pheno_col Name of phenotype column in merged table.
-#' @param covars Optional character vector of covariate names in merged table.
-#' @param id_col Sample ID column name (should match what you used in read_phenotypes()).
-#' @return A data.frame with CHROM, POS, beta, se, and p values for the Dosage effect.
+#' @title Perform single-variant association tests
+#'
+#' @description
+#' This function runs the core GWAS step in the pipeline. Using the merged
+#' phenotype–genotype table from read_phenotypes(), it performs a regression
+#' test for each variant. The phenotype is modeled as a function of genotype
+#' dosage and optional covariates.
+#'
+#' Binary phenotypes use logistic regression; continuous phenotypes use linear
+#' regression. The output includes per-variant effect size, standard error, and
+#' p-value, suitable for visualization with manhattan_plot().
+#'
+#' @param ph Merged data frame or list from read_phenotypes().
+#' @param pheno_col Name of the phenotype column.
+#' @param covars Optional character vector of covariate names.
+#' @param id_col Sample ID column name.
+#'
+#' @return A data frame with CHROM, POS, beta, standard error, and p-value.
+#'
+#' @examples
+#' vcf_path <- system.file("extdata", "toy.vcf",
+#'                         package = "VcfAssociation", mustWork = TRUE)
+#' vcf <- read_vcf(vcf_path)
+#' ph <- generate_phenotype(vcf_path,
+#'                          chrom = "chr12", pos = 11161,
+#'                          model = "carrier")
+#' tmp <- tempfile(fileext = ".csv")
+#' write.csv(ph, tmp, row.names = FALSE)
+#' ph_list <- read_phenotypes(tmp, id_col = "sample", genotypes = vcf$genotypes)
+#' gwas_res <- gwas_single(ph_list, pheno_col = "phenotype")
+#' head(gwas_res)
+#' @seealso manhattan_plot
+#' @references
+#' **stats**: R Core Team. (2025). *R: A Language and Environment for Statistical Computing.*
+#'  R Foundation for Statistical Computing, Vienna, Austria.
+#'  <https://www.R-project.org/>
+#'
+#' **dplyr**: Wickham, H., François, R., Henry, L., & Müller, K. (2023).
+#'  *dplyr: A Grammar of Data Manipulation.* R package version 1.x.
+#'  <https://CRAN.R-project.org/package=dplyr>
 #' @export
 gwas_single <- function(ph,
                         pheno_col = "phenotype",

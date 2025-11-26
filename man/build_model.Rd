@@ -2,7 +2,7 @@
 % Please edit documentation in R/build_model.R
 \name{build_model}
 \alias{build_model}
-\title{Fit models for one or multiple phenotypes and return a tidy summary table}
+\title{Fit gene- or region-level association models}
 \usage{
 build_model(
   df_list,
@@ -13,28 +13,52 @@ build_model(
 )
 }
 \arguments{
-\item{df_list}{A named/unnamed list of data.frames (typically from prepare_list()).}
+\item{df_list}{List of data frames prepared by prepare_list().}
 
-\item{outcomes}{Character vector of phenotype column name(s). Length can be 1
-(recycled) or match the number of tables in \code{df_list}.}
+\item{outcomes}{Phenotype column names.}
 
-\item{dosage}{Dosage column name. Default "Dosage".}
+\item{dosage}{Name of dosage column.}
 
-\item{covars}{Optional character vector of covariate column names.}
+\item{covars}{Optional covariate names.}
 
-\item{model}{One of "logistic","linear".}
+\item{model}{Either "logistic" or "linear".}
 }
 \value{
-data.frame with one row per (table × outcome) containing:
-\code{table_id, outcome, model, n, term, beta, se, p, ci_lo, ci_hi, OR, OR_lo, OR_hi, error}.
-For linear models, OR columns are NA; for logistic, ci_lo/ci_hi are NA.
+A data frame summarizing coefficients, standard errors, and p-values.
 }
 \description{
-Batch wrapper of single-variant association. Accepts a list input (e.g., the
-return of \code{prepare_list()}) and fits Linear or Logistic models of
-\code{outcome ~ Dosage + covariates} for one or more phenotypes, returning a single
-data.frame of summaries.
+This function performs multi-variant modeling using data prepared by
+prepare_list(). It fits linear or logistic (Firth) regression models that link
+phenotype to one or more genotype dosages and optional covariates.
+It is used to identify the joint effect of variants within a locus or gene.
 }
 \details{
 build_model
+}
+\examples{
+vcf_path <- system.file("extdata", "toy.vcf",
+                        package = "VcfAssociation", mustWork = TRUE)
+vcf <- read_vcf(vcf_path)
+ph <- generate_phenotype(vcf_path,
+                         chrom = "chr12", pos = 11161,
+                         model = "carrier")
+tmp <- tempfile(fileext = ".csv")
+write.csv(ph, tmp, row.names = FALSE)
+ph_list <- read_phenotypes(tmp, id_col = "sample", genotypes = vcf$genotypes)
+variants <- data.frame(CHROM = "chr12", POS = c(10537, 12180, 12372))
+df_list <- prepare_list(ph_list, variants, phenotypes = "phenotype")
+res <- build_model(df_list, outcomes = "phenotype", model = "logistic")
+head(res)
+}
+\references{
+\strong{stats}: R Core Team. (2025). \emph{R: A Language and Environment for Statistical Computing.}
+R Foundation for Statistical Computing, Vienna, Austria.
+\url{https://www.R-project.org/}
+
+\strong{dplyr}: Wickham, H., François, R., Henry, L., & Müller, K. (2023).
+\emph{dplyr: A Grammar of Data Manipulation.} R package version 1.x.
+\url{https://CRAN.R-project.org/package=dplyr}
+}
+\seealso{
+forest_plot
 }

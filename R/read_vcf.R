@@ -1,18 +1,35 @@
-#' Read a VCF and return a genotype and variants tables
+#' read_vcf
+#' @title Read and parse annotated VCF files for association analysis
 #'
 #' @description
-#' Minimal VCF reader for GWAS pipelines using the vcfR package (no Bioconductor).
-#' Produces:
-#'   (1) variant table with CHROM, POS, REF, ALT (no QUAL/FILTER/INFO),
-#'   (2) long-format genotype table with per-sample ALT(1) dosage.
+#' This function is the first step in the pipeline. It reads an annotated VCF file
+#' and extracts two key tables:
+#' 1) a variant table with basic variant information (CHROM, POS, REF, ALT),
+#' 2) a genotype table in long format with ALT-allele dosage for each sample.
 #'
-#' @param vcf_file Path to .vcf or .vcf.gz
-#' @param samples Optional character vector of sample IDs to keep (subset)
-#' @param genome  Ignored (kept for API compatibility)
+#' These tables form the foundation for all downstream steps, such as
+#' generating phenotypes and merging genotype–phenotype data.
 #'
-#' @return list(variants, genotypes)
-#'   - variants: data.frame(CHROM, POS, REF, ALT)
-#'   - genotypes: data.frame(CHROM, POS, REF, ALT, sample, Dosage)
+#' @param vcf_file Path to the annotated VCF file (.vcf or .vcf.gz).
+#' @param samples Optional character vector of sample IDs to retain.
+#' @param genome Optional genome build name (not used internally, kept for compatibility).
+#'
+#' @return A list containing:
+#' - variants: data frame with CHROM, POS, REF, and ALT.
+#' - genotypes: long-format data frame with per-sample Dosage values.
+#'
+#' @examples
+#' vcf_path <- system.file("extdata", "toy.vcf",
+#'                         package = "VcfAssociation", mustWork = TRUE)
+#' vcf <- read_vcf(vcf_path)
+#' head(vcf$variants)
+#' head(vcf$genotypes)
+#' @seealso generate_phenotype, read_phenotypes
+#' @references
+#' **vcfR**: Knaus, Brian J.; Grünwald, Niklaus J. (2017).
+#'  vcfR: a package to manipulate and visualize variant call format data in R.
+#'  *Molecular Ecology Resources* 17(1): 44–53.
+#'  <http://dx.doi.org/10.1111/1755-0998.12549>
 #' @export
 read_vcf <- function(vcf_file, samples = NULL, genome = NULL) {
   if (!file.exists(vcf_file)) stop("VCF file not found: ", vcf_file)

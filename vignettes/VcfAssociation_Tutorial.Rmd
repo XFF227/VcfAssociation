@@ -10,87 +10,276 @@ vignette: >
 ```{r, include = FALSE}
 knitr::opts_chunk$set(
   collapse = TRUE,
-  comment = "#>"
-)
-knitr::opts_chunk$set(
-  fig.width  = 10,     
-  fig.height = 7, 
-  fig.align  = "center", 
-  dpi = 350,       
-  out.width = "70%"  
+  comment  = "#>",
+  fig.width  = 10,
+  fig.height = 7,
+  fig.align  = "center",
+  dpi        = 350,
+  out.width  = "70%"
 )
 ```
+
+## Introduction
+
+The **VcfAssociation** package provides a light-weight workflow for
+performing variant–phenotype association analyses starting from annotated
+VCF files. The typical steps are:
+
+1. Read a VCF file and extract variant and genotype tables.
+2. Generate or import phenotype data.
+3. Merge phenotypes and genotypes by sample ID.
+4. Run single-variant regression (GWAS-style).
+5. Run gene/region-level models using selected variants.
+6. Visualize results with Manhattan and forest plots.
+
+In this vignette, we demonstrate the workflow using a small toy VCF file
+included with the package and explain what each figure represents in the
+context of the data being analyzed.
+
+## Installation
+
+If the package is available on CRAN, it can be installed with:
+
+```r
+install.packages("VcfAssociation")
+```
+
+If you are installing from GitHub, you can use:
+
+```r
+# install.packages("devtools")
+devtools::install_github("XFF227/VcfAssociation")
+```
+
+Once installed, load the package:
 
 ```{r setup}
 library(VcfAssociation)
 ```
 
-## Read VCF files
+## Reading VCF files
 
-User can read the input VCF file and generate genotype file by using "read_vcf()"
+Users can read an input VCF file and obtain both **variant information**
+and **genotype data** with `read_vcf()`.
 
 ```{r}
-vcf_path <- system.file("extdata", "toy.vcf", package = "VcfAssociation", mustWork = TRUE)
+vcf_path <- system.file("extdata", "toy.vcf",
+                        package = "VcfAssociation", mustWork = TRUE)
 vcf <- read_vcf(vcf_path)
+
 geno_data <- vcf$genotypes
-print(geno_data[201:205,])
+head(geno_data, 5)
 ```
 
-Besides, variants information could also be extracted from this function
+The `geno_data` object is a long-format table where each row corresponds
+to one sample at one locus, with an ALT-allele dosage column. This is
+the format used by downstream functions in the package.
+
+The same call also returns a **variant table**, which summarizes each
+locus once:
 
 ```{r}
-variants <- vcf$variant
+variants <- vcf$variants
 head(variants, 5)
 ```
 
-## Read Phenotype
+Here, each row corresponds to a unique genomic position (e.g. `CHROM`,
+`POS`, `REF`, `ALT`) present in the toy VCF. These variant coordinates
+will later be used to choose variants for gene/region-level models or
+for displaying GWAS results.
 
-User could use "read_phenotypes()" function to read cvs file contain phenotypes and covariants then merged with genotype information to generate two lists, which merged is our merged data and gap is anydata which doesn't matched. The return format of this function is the input for other function in this package running. If user don't have a phenotype file, they could use "generate_phenotype()" function to generate readable phenotype .csv file for their interst mutation position or variant.
+## Generating and reading phenotype data
+
+If you already have a phenotype file, you can read and merge it directly
+with `read_phenotypes()`. If not, `generate_phenotype()` can create a
+simple phenotype from a specific variant in the VCF.
+
+In this example, we generate a **carrier status phenotype** (0/1) based
+on a single variant at `chr12:11161`:
 
 ```{r}
-pheno_df  <- generate_phenotype(vcf_path, chrom = "chr12", pos = 11161, model = "carrier")
+pheno_df <- generate_phenotype(
+  vcf_path,
+  chrom = "chr12",
+  pos   = 11161,
+  model = "carrier"
+)
+head(pheno_df, 5)
+```
+
+We then write this phenotype to a temporary CSV file and use
+`read_phenotypes()` to merge it with the genotype table:
+
+```{r}
 tmpfile <- tempfile(fileext = ".csv")
 write.csv(pheno_df, tmpfile, row.names = FALSE)
-ph <- read_phenotypes(tmpfile, id_col = "sample", genotypes = geno_data)
-print(ph$merged[16:20,])
+
+ph <- read_phenotypes(
+  pheno_path = tmpfile,
+  id_col    = "sample",
+  genotypes = geno_data
+)
+
+head(ph$merged[16:20, ])
 ```
 
-## Build phenotype \~ variant model for interst genes
+The object `ph` is a list:
 
-### Step 1
+* `ph$merged` is the main merged table used by other functions.
+  It contains one row per sample–variant combination with both phenotype
+  and dosage data.
+* `ph$gaps` reports any sample IDs that appear only in the phenotype file
+  or only in the genotype table.
 
-Using data format output by the "read_phenotype()" then using function "prepare_list()" to create a sublist from merged data only contain the interst variants
+In the context of this toy example, `ph$merged` represents a small
+synthetic cohort in which the carrier status for one variant
+(`chr12:11161`) is used as the phenotype, and the remaining variants in
+the VCF are treated as candidate predictors.
+
+## Gene/region-level models (phenotype ~ selected variants)
+
+Sometimes we want to jointly model a set of variants (e.g. within a
+gene or a region) instead of testing each variant individually.
+This is handled by `prepare_list()` followed by `build_model()` and
+visualized with `forest_plot()`.
+
+### Step 1: Select variants and prepare per-variant data
+
+We first specify a small set of variants of interest and create a list
+of data frames, one per variant:
 
 ```{r}
-variants_df <- unique(ph$merged[, c("CHROM", "POS")])[25:28, ]
-df_list_sel <- prepare_list(ph, variants = variants_df, phenotypes = "phenotype")
+variants_df <- data.frame(
+  CHROM = c("chr12", "chr12", "chr12"),
+  POS   = c(10537, 12372, 12180)
+)
+
+df_list_sel <- prepare_list(
+  ph,
+  variants   = variants_df,
+  phenotypes = "phenotype"
+)
+
+names(df_list_sel)
 ```
 
-### Step 2
+Each element of `df_list_sel` contains:
 
-Using "build_model()" function to build the model, then pass the result into "forest_plot()" to generate a forest plot to view.
+* the selected variant’s dosage for all samples,
+* the phenotype (`phenotype`), and
+* any covariates (if provided).
+
+In the context of the toy data, these three variants might be thought of
+as belonging to the same hypothetical gene or locus whose joint
+association with the carrier status phenotype we want to investigate.
+
+### Step 2: Fit models and visualize with a forest plot
+
+Next, we fit logistic regression models using `build_model()`, then
+visualize the estimated effect sizes using `forest_plot()`:
 
 ```{r}
-variant_assoc_result <- build_model(df_list_sel, outcomes = "phenotype", model = "logistic")
-fp <- forest_plot(variant_assoc_result, label_col = "table_id", facet_col = "phenotype", show_errors = TRUE)
+variant_assoc_result <- build_model(
+  df_list_sel,
+  outcomes = "phenotype",
+  model    = "logistic"
+)
+
+fp <- forest_plot(
+  variant_assoc_result,
+  label_col   = "table_id",
+  facet_col   = "phenotype",
+  show_errors = TRUE
+)
 fp
 ```
 
-## Run GAWS analyze phenotype \~ all variants
+**Interpreting the forest plot**
 
-### Step 1
+In this forest plot:
 
-Using data format output by the "read_phenotype()" then using function "gwas_single()" and use default or set parameter to get GWAS result.
+* Each row corresponds to one variant in `variants_df`.
+* The point shows the estimated log-odds or odds ratio (depending on the
+  plotting options used inside `forest_plot()`), and the horizontal line
+  shows its confidence interval.
+* The vertical reference line represents “no effect” (e.g. odds ratio =
+  1 on the original scale).
+
+Because we are using a small toy VCF, the associations are not meant to
+be biologically meaningful. Instead, the plot demonstrates how the
+package can display effect sizes and uncertainty for a set of variants
+being modeled jointly.
+
+## Genome-wide (single-variant) association: phenotype ~ all variants
+
+The core GWAS-style analysis is performed by `gwas_single()`, which
+tests the association between the phenotype and each variant in the
+merged data.
+
+### Step 1: Run single-variant regression
 
 ```{r}
-result <- gwas_single(ph, pheno_col = "phenotype", covars = NULL, id_col = "sample") 
+result <- gwas_single(
+  ph,
+  pheno_col = "phenotype",
+  covars    = NULL,
+  id_col    = "sample"
+)
+
+head(result, 5)
 ```
 
-### Step 2
+Here, `result` contains one row per variant, with effect size estimates,
+standard errors, and p-values. In this toy example, all association
+signals come from the synthetic carrier phenotype generated earlier, so
+any apparent peaks should be interpreted as purely illustrative.
 
-Use data output by step 1 into "manhattan_plot()" to generate manhattan plot for GWAS results
+### Step 2: Visualize GWAS results with a Manhattan plot
+
+We can pass the GWAS results to `manhattan_plot()` to obtain a standard
+Manhattan plot:
 
 ```{r}
 mp <- manhattan_plot(result)
 mp
 ```
+
+**Interpreting the Manhattan plot**
+
+In this plot:
+
+* The x-axis shows genomic position grouped by chromosome.
+* The y-axis shows (-\log_{10}(p)), so higher points correspond to
+  smaller p-values (stronger evidence against the null).
+* Each point is one variant from the toy VCF.
+
+Because the example uses a very small synthetic dataset, the plot is
+intended to illustrate the *shape* and interpretation of a Manhattan
+plot rather than to highlight real genome-wide significant loci. In a
+real analysis, you would look for distinct peaks that exceed a chosen
+significance threshold.
+
+## Summary
+
+This vignette has shown how to:
+
+1. Read an annotated VCF file and obtain variant and genotype tables.
+2. Generate or import phenotype data and merge it with genotypes.
+3. Run single-variant GWAS using `gwas_single()` and visualize results
+   with `manhattan_plot()`.
+4. Select specific variants, fit gene/region-level models with
+   `build_model()`, and display effect sizes in a forest plot.
+
+Together, these steps form a complete mini-pipeline for exploring
+variant–phenotype associations using the **VcfAssociation** package.
+
+## Session information
+
+For reproducibility, we record the R session information used to build
+this vignette:
+
+```{r sessionInfo}
+sessionInfo()
+```
+
+*/

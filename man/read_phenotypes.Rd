@@ -2,7 +2,7 @@
 % Please edit documentation in R/read_phenotypes.R
 \name{read_phenotypes}
 \alias{read_phenotypes}
-\title{Read phenotype table and merge with genotypes}
+\title{Read phenotype data and merge with genotype data}
 \usage{
 read_phenotypes(
   pheno_path,
@@ -12,17 +12,54 @@ read_phenotypes(
 )
 }
 \arguments{
-\item{pheno_path}{CSV/TSV path.}
+\item{pheno_path}{Path to the phenotype file (CSV or TSV).}
 
-\item{id_col}{Sample ID column name in phenotype file.}
+\item{id_col}{Name of the sample ID column in the phenotype file.}
 
-\item{genotypes}{Optional genotype long table from \code{read_vcf()}.}
+\item{genotypes}{Optional genotype table from read_vcf().}
 
-\item{by}{Named character vector mapping phenotype id to genotype id (default sample->sample).}
+\item{by}{Mapping of sample ID columns between phenotype and genotype tables.}
 }
 \value{
-list(merged=data.frame, gaps=list(pheno_only, geno_only))
+A list containing:
+\itemize{
+\item merged: combined phenotype–genotype table.
+\item gaps: unmatched sample IDs.
+}
 }
 \description{
+This function reads a phenotype file (such as one produced by generate_phenotype())
+and merges it with the genotype table returned by read_vcf(). The merge is
+performed by sample ID. It produces a unified data frame containing
+both phenotype and genotype information for each sample.
+
+It also reports "gaps": samples that appear only in one table, helping
+identify ID mismatches early in the analysis.
+}
+\details{
 read_phenotypes
+}
+\examples{
+vcf_path <- system.file("extdata", "toy.vcf",
+                        package = "VcfAssociation", mustWork = TRUE)
+vcf <- read_vcf(vcf_path)
+ph <- generate_phenotype(vcf_path,
+                         chrom = "chr12", pos = 11161,
+                         model = "carrier")
+tmp <- tempfile(fileext = ".csv")
+write.csv(ph, tmp, row.names = FALSE)
+ph_list <- read_phenotypes(tmp, id_col = "sample", genotypes = vcf$genotypes)
+head(ph_list$merged)
+}
+\references{
+\strong{readr}: Wickham, H., Hester, J., & Bryan, J. (2023).
+\emph{readr: Read Rectangular Text Data.} R package version 2.x.
+\url{https://CRAN.R-project.org/package=readr}
+
+\strong{dplyr}: Wickham, H., François, R., Henry, L., & Müller, K. (2023).
+\emph{dplyr: A Grammar of Data Manipulation.} R package version 1.x.
+\url{https://CRAN.R-project.org/package=dplyr}
+}
+\seealso{
+gwas_single, prepare_list
 }

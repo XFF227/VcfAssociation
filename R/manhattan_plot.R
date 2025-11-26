@@ -1,16 +1,44 @@
 #' manhattan_plot
-#' @title Draw a Manhattan plot from single-variant results
-#' @description Expects a data.frame with at least CHROM, POS, and p columns.
-#' @param df Data frame containing GWAS results (must have CHROM, POS, p).
-#' @param chr_col Column name for chromosome. Default "CHROM".
-#' @param pos_col Column name for 1-based position. Default "POS".
-#' @param p_col   Column name for p-values. Default "p".
-#' @param genome_wide Genome-wide significance threshold (drawn as red line). Default 5e-8 (NULL to disable).
-#' @param suggestive  Suggestive threshold (drawn as dashed line). Default 1e-5 (NULL to disable).
-#' @param highlight_snps Optional character vector of SNP IDs to highlight (requires snp_col not NULL).
-#' @param snp_col Column name of SNP ID if you want to highlight/annotate. Default NULL.
-#' @param annotate_top_n Integer; annotate top-N most significant points (by p). Default 0.
-#' @return A ggplot object.
+#' @title Create a Manhattan plot from GWAS results
+#'
+#' @description
+#' This function generates a Manhattan plot from a GWAS result table, such as the
+#' output of gwas_single(). It displays genomic position on the x-axis and
+#' -log10(p-value) on the y-axis. Genome-wide and suggestive significance thresholds
+#' can be visualized, and top hits can be labeled or highlighted.
+#'
+#' @param df Data frame of GWAS results.
+#' @param chr_col Column name for chromosome (default "CHROM").
+#' @param pos_col Column name for position (default "POS").
+#' @param p_col Column name for p-values (default "p").
+#' @param genome_wide Optional genome-wide significance threshold.
+#' @param suggestive Optional suggestive threshold.
+#' @param highlight_snps Optional vector of variant IDs to highlight.
+#' @param snp_col Column name for variant IDs.
+#' @param annotate_top_n Number of top hits to label.
+#'
+#' @return A ggplot object representing the Manhattan plot.
+#'
+#' @examples
+#' vcf_path <- system.file("extdata", "toy.vcf",
+#'                         package = "VcfAssociation", mustWork = TRUE)
+#' vcf <- read_vcf(vcf_path)
+#' ph <- generate_phenotype(vcf_path,
+#'                          chrom = "chr12", pos = 11161,
+#'                          model = "carrier")
+#' tmp <- tempfile(fileext = ".csv")
+#' write.csv(ph, tmp, row.names = FALSE)
+#' ph_list <- read_phenotypes(tmp, id_col = "sample", genotypes = vcf$genotypes)
+#' gwas_res <- gwas_single(ph_list, pheno_col = "phenotype")
+#' manhattan_plot(gwas_res)
+#' @seealso gwas_single
+#' @references
+#' **ggplot2**: Wickham, H. (2016). *ggplot2: Elegant Graphics for Data Analysis.*
+#'  Springer-Verlag New York. <https://ggplot2.tidyverse.org>
+#'
+#' **dplyr**: Wickham, H., François, R., Henry, L., & Müller, K. (2023).
+#'  *dplyr: A Grammar of Data Manipulation.* R package version 1.x.
+#'  <https://CRAN.R-project.org/package=dplyr>
 #' @export
 manhattan_plot <- function(df,
                            chr_col = "CHROM",

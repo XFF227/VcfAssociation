@@ -1,10 +1,44 @@
 #' read_phenotypes
-#' @title Read phenotype table and merge with genotypes
-#' @param pheno_path CSV/TSV path.
-#' @param id_col Sample ID column name in phenotype file.
-#' @param genotypes Optional genotype long table from \code{read_vcf()}.
-#' @param by Named character vector mapping phenotype id to genotype id (default sample->sample).
-#' @return list(merged=data.frame, gaps=list(pheno_only, geno_only))
+#' @title Read phenotype data and merge with genotype data
+#'
+#' @description
+#' This function reads a phenotype file (such as one produced by generate_phenotype())
+#' and merges it with the genotype table returned by read_vcf(). The merge is
+#' performed by sample ID. It produces a unified data frame containing
+#' both phenotype and genotype information for each sample.
+#'
+#' It also reports "gaps": samples that appear only in one table, helping
+#' identify ID mismatches early in the analysis.
+#'
+#' @param pheno_path Path to the phenotype file (CSV or TSV).
+#' @param id_col Name of the sample ID column in the phenotype file.
+#' @param genotypes Optional genotype table from read_vcf().
+#' @param by Mapping of sample ID columns between phenotype and genotype tables.
+#'
+#' @return A list containing:
+#' - merged: combined phenotype–genotype table.
+#' - gaps: unmatched sample IDs.
+#'
+#' @examples
+#' vcf_path <- system.file("extdata", "toy.vcf",
+#'                         package = "VcfAssociation", mustWork = TRUE)
+#' vcf <- read_vcf(vcf_path)
+#' ph <- generate_phenotype(vcf_path,
+#'                          chrom = "chr12", pos = 11161,
+#'                          model = "carrier")
+#' tmp <- tempfile(fileext = ".csv")
+#' write.csv(ph, tmp, row.names = FALSE)
+#' ph_list <- read_phenotypes(tmp, id_col = "sample", genotypes = vcf$genotypes)
+#' head(ph_list$merged)
+#' @seealso gwas_single, prepare_list
+#' @references
+#' **readr**: Wickham, H., Hester, J., & Bryan, J. (2023).
+#'  *readr: Read Rectangular Text Data.* R package version 2.x.
+#'  <https://CRAN.R-project.org/package=readr>
+#'
+#' **dplyr**: Wickham, H., François, R., Henry, L., & Müller, K. (2023).
+#'  *dplyr: A Grammar of Data Manipulation.* R package version 1.x.
+#'  <https://CRAN.R-project.org/package=dplyr>
 #' @export
 read_phenotypes <- function(pheno_path, id_col = "sample", genotypes = NULL, by = c("sample" = "sample")) {
   if (!file.exists(pheno_path)) stop("Phenotype not found: ", pheno_path)
