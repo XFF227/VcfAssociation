@@ -9,7 +9,17 @@ forest_plot(
   label_col = "table_id",
   facet_col = "outcome",
   show_errors = TRUE,
-  annotate_p = TRUE
+  annotate_p = TRUE,
+  base_size = 16,
+  title_size = 18,
+  axis_title_size = 14,
+  axis_text_size = 12,
+  point_size = 3,
+  errorbar_size = 0.8,
+  zero_line_size = 0.9,
+  error_point_size = 3,
+  error_label_size = 3.6,
+  p_label_size = 3.6
 )
 }
 \arguments{
@@ -22,6 +32,26 @@ forest_plot(
 \item{show_errors}{Whether to display errors for failed fits.}
 
 \item{annotate_p}{Whether to label p-values next to estimates.}
+
+\item{base_size}{Base font size for the plot theme (default 16).}
+
+\item{title_size}{Plot title font size (default 18).}
+
+\item{axis_title_size}{Axis titles font size (default 14).}
+
+\item{axis_text_size}{Axis text font size (default 12).}
+
+\item{point_size}{Point size for valid estimates (default 3).}
+
+\item{errorbar_size}{Line width for confidence intervals (default 0.8).}
+
+\item{zero_line_size}{Line width for the vertical reference line at 0 (default 0.9).}
+
+\item{error_point_size}{Point size for invalid rows (default 3).}
+
+\item{error_label_size}{Text size for error messages (default 3.6).}
+
+\item{p_label_size}{Text size for p-value labels (default 3.6).}
 }
 \value{
 A ggplot object showing the forest plot.
@@ -34,29 +64,6 @@ of associations across multiple loci.
 }
 \details{
 forest_plot
-}
-\examples{
-vcf_path <- system.file("extdata", "toy.vcf",
-                        package = "VcfAssociation", mustWork = TRUE)
-vcf <- read_vcf(vcf_path)
-ph <- generate_phenotype(vcf_path,
-                         chrom = "chr12", pos = 11161,
-                         model = "carrier")
-tmp <- tempfile(fileext = ".csv")
-write.csv(ph, tmp, row.names = FALSE)
-ph_list <- read_phenotypes(tmp, id_col = "sample", genotypes = vcf$genotypes)
-variants <- data.frame(CHROM = "chr12", POS = c(10537, 12180, 12372))
-df_list <- prepare_list(ph_list, variants, phenotypes = "phenotype")
-res <- build_model(df_list, outcomes = "phenotype", model = "logistic")
-forest_plot(res)
-}
-\references{
-\strong{ggplot2}: Wickham, H. (2016). \emph{ggplot2: Elegant Graphics for Data Analysis.}
-Springer-Verlag New York. \url{https://ggplot2.tidyverse.org}
-
-\strong{dplyr}: Wickham, H., François, R., Henry, L., & Müller, K. (2023).
-\emph{dplyr: A Grammar of Data Manipulation.} R package version 1.x.
-\url{https://CRAN.R-project.org/package=dplyr}
 }
 \seealso{
 build_model

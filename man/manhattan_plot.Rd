@@ -13,7 +13,17 @@ manhattan_plot(
   suggestive = 1e-05,
   highlight_snps = NULL,
   snp_col = NULL,
-  annotate_top_n = 0
+  annotate_top_n = 0,
+  base_size = 16,
+  title_size = 18,
+  axis_title_size = 15,
+  axis_text_size = 12,
+  point_size = 1.2,
+  point_alpha = 0.9,
+  highlight_point_size = 2.5,
+  suggestive_line_size = 0.8,
+  genome_line_size = 1,
+  label_size = 4
 )
 }
 \arguments{
@@ -34,6 +44,26 @@ manhattan_plot(
 \item{snp_col}{Column name for variant IDs.}
 
 \item{annotate_top_n}{Number of top hits to label.}
+
+\item{base_size}{Base font size for the plot theme (default 16).}
+
+\item{title_size}{Plot title font size (default 18).}
+
+\item{axis_title_size}{Axis titles font size (default 15).}
+
+\item{axis_text_size}{Axis text font size (default 12).}
+
+\item{point_size}{Point size for all SNPs (default 1.2).}
+
+\item{point_alpha}{Point transparency for all SNPs (default 0.9).}
+
+\item{highlight_point_size}{Point size for highlighted SNPs (default 2.5).}
+
+\item{suggestive_line_size}{Line width for suggestive threshold (default 0.8).}
+
+\item{genome_line_size}{Line width for genome-wide threshold (default 1).}
+
+\item{label_size}{Font size for annotated SNP labels (default 4).}
 }
 \value{
 A ggplot object representing the Manhattan plot.
@@ -46,28 +76,4 @@ can be visualized, and top hits can be labeled or highlighted.
 }
 \details{
 manhattan_plot
-}
-\examples{
-vcf_path <- system.file("extdata", "toy.vcf",
-                        package = "VcfAssociation", mustWork = TRUE)
-vcf <- read_vcf(vcf_path)
-ph <- generate_phenotype(vcf_path,
-                         chrom = "chr12", pos = 11161,
-                         model = "carrier")
-tmp <- tempfile(fileext = ".csv")
-write.csv(ph, tmp, row.names = FALSE)
-ph_list <- read_phenotypes(tmp, id_col = "sample", genotypes = vcf$genotypes)
-gwas_res <- gwas_single(ph_list, pheno_col = "phenotype")
-manhattan_plot(gwas_res)
-}
-\references{
-\strong{ggplot2}: Wickham, H. (2016). \emph{ggplot2: Elegant Graphics for Data Analysis.}
-Springer-Verlag New York. \url{https://ggplot2.tidyverse.org}
-
-\strong{dplyr}: Wickham, H., François, R., Henry, L., & Müller, K. (2023).
-\emph{dplyr: A Grammar of Data Manipulation.} R package version 1.x.
-\url{https://CRAN.R-project.org/package=dplyr}
-}
-\seealso{
-gwas_single
 }

@@ -32,3 +32,4 @@ SystemRequirements: Rtools (for Windows, when installing from source)
 Config/testthat/edition: 3
 VignetteBuilder: knitr
 LazyData: true
+biocViews: NA

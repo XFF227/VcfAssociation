@@ -1,32 +1,97 @@
+# ============================================================
+# Helper functions for build_model
+# ============================================================
+
+#' @title Create a standardized result row
+#' @description Internal utility to create a single standardized data.frame row
+#' used throughout `build_model()` for consistent outputs and error handling.
+#' @keywords internal
+make_row <- function(id,
+                     outcome,
+                     model,
+                     dosage,
+                     n,
+                     beta   = NA_real_,
+                     se     = NA_real_,
+                     p      = NA_real_,
+                     ci_lo  = NA_real_,
+                     ci_hi  = NA_real_,
+                     OR     = NA_real_,
+                     OR_lo  = NA_real_,
+                     OR_hi  = NA_real_,
+                     error  = NA_character_) {
+  data.frame(
+    table_id = id,
+    outcome  = outcome,
+    model    = model,
+    n        = n,
+    term     = dosage,
+    beta     = beta,
+    se       = se,
+    p        = p,
+    ci_lo    = ci_lo,
+    ci_hi    = ci_hi,
+    OR       = OR,
+    OR_lo    = OR_lo,
+    OR_hi    = OR_hi,
+    error    = error,
+    stringsAsFactors = FALSE
+  )
+}
+
+#' @title Bind list of data frames without rownames
+#' @description Internal utility to rbind a list of data.frames and
+#' remove row names for consistent formatting.
+#' @keywords internal
+bind_rows_list <- function(lst) {
+  out <- do.call(rbind, lst)
+  rownames(out) <- NULL
+  out
+}
+
+#' @title Safe Firth logistic regression
+#' @description Suppresses warnings and catches errors during
+#' Firth logistic regression fitting using `logistf::logistf()`.
+#' @param formula Model formula.
+#' @param data Data frame.
+#' @param maxit Maximum iterations.
+#' @keywords internal
+firth_fit_safe <- function(formula, data, maxit) {
+  suppressWarnings(
+    try(
+      logistf::logistf(
+        formula,
+        data      = data,
+        plcontrol = logistf::logistpl.control(maxit = maxit)
+      ),
+      silent = TRUE
+    )
+  )
+}
+
+
+# ============================================================
+# Main function build_model
+# ============================================================
+
 #' build_model
 #' @title Fit gene- or region-level association models
 #'
 #' @description
 #' `build_model()` fits gene- or region-level association models on the
-#' list of data.frames produced by `prepare_list()`. First, it checks that
-#' each table contains the requested outcome, dosage, and covariate columns
-#' and that all tables have the same number of rows; if required columns are
-#' missing or the sample size is too small, the function returns one row per
-#' variant with estimates set to `NA` and a short message in the `error`
-#' field. The phenotype, covariates, and per-variant dosage columns are then
-#' merged into a single modelling data set and a joint formula linking the
-#' outcome to all variants (and optional covariates) is constructed, with
-#' `na.omit` used to remove rows containing missing values. For
-#' `model = "linear"`, a standard linear model is fit with `stats::lm()`, and
-#' per-variant regression coefficients, standard errors, p-values and
-#' confidence intervals are extracted for each dosage column. For
-#' `model = "logistic"`, the function uses Firth-penalized logistic regression
-#' via `logistf::logistf()`: each variant is first screened in a univariate
-#' Firth model to detect non-convergence or unstable standard errors, and
-#' such variants are flagged, assigned `NA` estimates, and excluded from the
-#' joint analysis. A joint Firth model is then fit on the remaining stable
-#' variants; if the joint fit is still unstable, variants are removed one at
-#' a time until a stable model is obtained or no variants remain. For all
-#' variants retained in the final joint model, the function returns effect
-#' estimates, standard errors, Wald p-values and odds ratios (with confidence
-#' intervals on the odds-ratio scale), while variants that were dropped at
-#' any stage carry `NA` estimates and a short reason (≤ 10 words) in the
-#' `error` column.
+#' list of data.frames from `prepare_list()`. It merges phenotype, dosage,
+#' and optional covariates into a modeling dataset and automatically chooses
+#' between linear (`lm`) and Firth-penalized logistic (`logistf`) regression.
+#'
+#' For linear models, the function reports per-variant coefficients, standard
+#' errors, p-values, and confidence intervals. For logistic models, it first
+#' screens variants in univariate Firth regressions to remove non-convergent
+#' or unstable ones, then fits a joint model on the remaining variants and
+#' iteratively drops those causing instability.
+#'
+#' Results include beta, SE, p, CI, and odds ratios where applicable. Variants
+#' excluded due to missing columns, insufficient sample size, or model failure
+#' return `NA` estimates with a brief reason in the `error` column.
 #'
 #' @param df_list List of data frames prepared by prepare_list().
 #' @param outcomes Phenotype column names.
@@ -76,20 +141,12 @@ build_model <- function(df_list,
   if (any(vapply(miss_any, length, integer(1L)) > 0L)) {
     res_err <- Map(
       f = function(miss, id) {
-        data.frame(
-          table_id = id, outcome = outcome, model = model, n = NA_integer_,
-          term = dosage, beta = NA_real_, se = NA_real_, p = NA_real_,
-          ci_lo = NA_real_, ci_hi = NA_real_,
-          OR = NA_real_, OR_lo = NA_real_, OR_hi = NA_real_,
-          error = "Missing columns; removed.",
-          stringsAsFactors = FALSE
-        )
+        if (length(miss) > 0L)
+          make_row(id, outcome, model, dosage, n = NA_integer_, error = "Missing columns; removed.")
       },
       miss_any, table_ids
     )
-    out <- do.call(rbind, res_err)
-    rownames(out) <- NULL
-    return(out)
+    return(bind_rows_list(res_err))
   }
   
   n_rows <- vapply(tables, nrow, integer(1L))
@@ -117,19 +174,9 @@ build_model <- function(df_list,
   n_obs <- nrow(mf)
   
   if (n_obs < max(3L, length(rhs_terms) + 2L)) {
-    res_err <- lapply(table_ids, function(id) {
-      data.frame(
-        table_id = id, outcome = outcome, model = model, n = n_obs,
-        term = dosage, beta = NA_real_, se = NA_real_, p = NA_real_,
-        ci_lo = NA_real_, ci_hi = NA_real_,
-        OR = NA_real_, OR_lo = NA_real_, OR_hi = NA_real_,
-        error = "Too few samples; removed.",
-        stringsAsFactors = FALSE
-      )
-    })
-    out <- do.call(rbind, res_err)
-    rownames(out) <- NULL
-    return(out)
+    res_err <- lapply(table_ids, function(id)
+      make_row(id, outcome, model, dosage, n = n_obs, error = "Too few samples; removed."))
+    return(bind_rows_list(res_err))
   }
   
   ## -------- linear branch --------
@@ -138,69 +185,29 @@ build_model <- function(df_list,
     fit <- try(stats::lm(fm, data = model_dat), silent = TRUE)
     
     if (inherits(fit, "try-error")) {
-      res_err <- lapply(table_ids, function(id) {
-        data.frame(
-          table_id = id, outcome = outcome, model = model, n = n_obs,
-          term = dosage, beta = NA_real_, se = NA_real_, p = NA_real_,
-          ci_lo = NA_real_, ci_hi = NA_real_,
-          OR = NA_real_, OR_lo = NA_real_, OR_hi = NA_real_,
-          error = "Linear model failed.",
-          stringsAsFactors = FALSE
-        )
-      })
-      out <- do.call(rbind, res_err)
-      rownames(out) <- NULL
-      return(out)
+      res_err <- lapply(table_ids, function(id)
+        make_row(id, outcome, model, dosage, n = n_obs, error = "Linear model failed."))
+      return(bind_rows_list(res_err))
     }
     
     co <- summary(fit)$coef
+    
     res_list <- lapply(table_ids, function(id) {
       if (!(id %in% rownames(co))) {
-        return(data.frame(
-          table_id = id, outcome = outcome, model = model, n = n_obs,
-          term = dosage, beta = NA_real_, se = NA_real_, p = NA_real_,
-          ci_lo = NA_real_, ci_hi = NA_real_,
-          OR = NA_real_, OR_lo = NA_real_, OR_hi = NA_real_,
-          error = "Linear term missing.",
-          stringsAsFactors = FALSE
-        ))
+        return(make_row(id, outcome, model, dosage, n = n_obs, error = "Linear term missing."))
       }
       est <- co[id, "Estimate"]
       se  <- co[id, "Std. Error"]
       p   <- co[id, "Pr(>|t|)"]
       ci  <- try(stats::confint(fit, parm = id), silent = TRUE)
       if (inherits(ci, "try-error")) ci <- c(NA_real_, NA_real_)
-      data.frame(
-        table_id = id, outcome = outcome, model = model, n = n_obs,
-        term = dosage, beta = unname(est), se = unname(se), p = unname(p),
-        ci_lo = unname(ci[1]), ci_hi = unname(ci[2]),
-        OR = NA_real_, OR_lo = NA_real_, OR_hi = NA_real_,
-        error = NA_character_,
-        stringsAsFactors = FALSE
-      )
+      make_row(id, outcome, model, dosage, n_obs, est, se, p, ci[1], ci[2])
     })
     
-    res <- do.call(rbind, res_list)
-    rownames(res) <- NULL
-    return(res)
+    return(bind_rows_list(res_list))
   }
   
   ## -------- logistic (Firth) branch --------
-  
-  # helper: safe Firth fit with suppressed warnings
-  firth_fit <- function(formula, data, maxit) {
-    suppressWarnings(
-      try(
-        logistf::logistf(
-          formula,
-          data      = data,
-          plcontrol = logistf::logistpl.control(maxit = maxit)
-        ),
-        silent = TRUE
-      )
-    )
-  }
-
   bad_ids    <- character(0)
   bad_reason <- character(0)
   good_ids   <- character(0)
@@ -217,7 +224,7 @@ build_model <- function(df_list,
       next
     }
     
-    fit1 <- firth_fit(fm1, mf1, maxit = maxit)
+    fit1 <- firth_fit_safe(fm1, mf1, maxit)
     
     if (inherits(fit1, "try-error")) {
       bad_ids    <- c(bad_ids, id)
@@ -236,29 +243,23 @@ build_model <- function(df_list,
     good_ids <- c(good_ids, id)
   }
   names(bad_reason) <- bad_ids
+  
   if (length(good_ids) == 0L) {
     res_err <- lapply(table_ids, function(id) {
       msg <- if (id %in% bad_ids) bad_reason[[id]] else "Unstable Firth."
-      data.frame(
-        table_id = id, outcome = outcome, model = model, n = n_obs,
-        term = dosage, beta = NA_real_, se = NA_real_, p = NA_real_,
-        ci_lo = NA_real_, ci_hi = NA_real_,
-        OR = NA_real_, OR_lo = NA_real_, OR_hi = NA_real_,
-        error = msg,
-        stringsAsFactors = FALSE
-      )
+      make_row(id, outcome, model, dosage, n_obs, error = msg)
     })
-    out <- do.call(rbind, res_err)
-    rownames(out) <- NULL
-    return(out)
+    return(bind_rows_list(res_err))
   }
+  
   joint_drop <- character(0)
   keep_ids   <- good_ids
+  fit_joint  <- NULL
   
   repeat {
     rhs_joint <- paste(c(covars, keep_ids), collapse = " + ")
     fm_joint  <- stats::as.formula(paste(outcome, "~", rhs_joint))
-    fit_joint <- firth_fit(fm_joint, model_dat, maxit = maxit)
+    fit_joint <- firth_fit_safe(fm_joint, model_dat, maxit)
     
     if (inherits(fit_joint, "try-error")) {
       if (length(keep_ids) <= 1L) {
@@ -288,10 +289,7 @@ build_model <- function(df_list,
     
     bad_in_joint <- keep_ids[!is.finite(diag(vcj)[keep_ids]) |
                                diag(vcj)[keep_ids] <= 0]
-    if (length(bad_in_joint) == 0L) {
-      # joint OK
-      break
-    }
+    if (length(bad_in_joint) == 0L) break
     if (length(keep_ids) <= length(bad_in_joint)) {
       joint_drop <- c(joint_drop, keep_ids)
       keep_ids   <- character(0)
@@ -313,70 +311,24 @@ build_model <- function(df_list,
       } else {
         "Unstable Firth."
       }
-      data.frame(
-        table_id = id, outcome = outcome, model = model, n = n_obs,
-        term = dosage, beta = NA_real_, se = NA_real_, p = NA_real_,
-        ci_lo = NA_real_, ci_hi = NA_real_,
-        OR = NA_real_, OR_lo = NA_real_, OR_hi = NA_real_,
-        error = msg,
-        stringsAsFactors = FALSE
-      )
+      make_row(id, outcome, model, dosage, n_obs, error = msg)
     })
-    out <- do.call(rbind, res_err)
-    rownames(out) <- NULL
-    return(out)
+    return(bind_rows_list(res_err))
   }
   
   coefs <- coef(fit_joint)
   vc    <- try(stats::vcov(fit_joint), silent = TRUE)
   
   res_list <- lapply(table_ids, function(id) {
-    
-    if (id %in% bad_ids) {
-      msg <- bad_reason[[id]]
-      return(data.frame(
-        table_id = id, outcome = outcome, model = model, n = n_obs,
-        term = dosage, beta = NA_real_, se = NA_real_, p = NA_real_,
-        ci_lo = NA_real_, ci_hi = NA_real_,
-        OR = NA_real_, OR_lo = NA_real_, OR_hi = NA_real_,
-        error = msg,
-        stringsAsFactors = FALSE
-      ))
-    }
-    
-    if (id %in% joint_drop) {
-      return(data.frame(
-        table_id = id, outcome = outcome, model = model, n = n_obs,
-        term = dosage, beta = NA_real_, se = NA_real_, p = NA_real_,
-        ci_lo = NA_real_, ci_hi = NA_real_,
-        OR = NA_real_, OR_lo = NA_real_, OR_hi = NA_real_,
-        error = "Joint Firth failed.",
-        stringsAsFactors = FALSE
-      ))
-    }
-    
-    if (!(id %in% names(coefs))) {
-      return(data.frame(
-        table_id = id, outcome = outcome, model = model, n = n_obs,
-        term = dosage, beta = NA_real_, se = NA_real_, p = NA_real_,
-        ci_lo = NA_real_, ci_hi = NA_real_,
-        OR = NA_real_, OR_lo = NA_real_, OR_hi = NA_real_,
-        error = "Term dropped; removed.",
-        stringsAsFactors = FALSE
-      ))
-    }
-    
+    if (id %in% bad_ids)
+      return(make_row(id, outcome, model, dosage, n_obs, error = bad_reason[[id]]))
+    if (id %in% joint_drop)
+      return(make_row(id, outcome, model, dosage, n_obs, error = "Joint Firth failed."))
+    if (!(id %in% names(coefs)))
+      return(make_row(id, outcome, model, dosage, n_obs, error = "Term dropped; removed."))
     if (inherits(vc, "try-error") ||
-        !is.finite(vc[id, id]) || vc[id, id] <= 0) {
-      return(data.frame(
-        table_id = id, outcome = outcome, model = model, n = n_obs,
-        term = dosage, beta = NA_real_, se = NA_real_, p = NA_real_,
-        ci_lo = NA_real_, ci_hi = NA_real_,
-        OR = NA_real_, OR_lo = NA_real_, OR_hi = NA_real_,
-        error = "Unstable SE; removed.",
-        stringsAsFactors = FALSE
-      ))
-    }
+        !is.finite(vc[id, id]) || vc[id, id] <= 0)
+      return(make_row(id, outcome, model, dosage, n_obs, error = "Unstable SE; removed."))
     
     est <- unname(coefs[id])
     se  <- sqrt(vc[id, id])
@@ -385,21 +337,9 @@ build_model <- function(df_list,
     zc  <- stats::qnorm(0.975)
     lo_logit <- est - zc * se
     hi_logit <- est + zc * se
-    OR    <- exp(est)
-    OR_lo <- exp(lo_logit)
-    OR_hi <- exp(hi_logit)
-    
-    data.frame(
-      table_id = id, outcome = outcome, model = model, n = n_obs,
-      term = dosage, beta = est, se = se, p = p,
-      ci_lo = NA_real_, ci_hi = NA_real_,
-      OR = OR, OR_lo = OR_lo, OR_hi = OR_hi,
-      error = NA_character_,
-      stringsAsFactors = FALSE
-    )
+    make_row(id, outcome, model, dosage, n_obs, est, se, p,
+             OR = exp(est), OR_lo = exp(lo_logit), OR_hi = exp(hi_logit))
   })
   
-  res <- do.call(rbind, res_list)
-  rownames(res) <- NULL
-  res
+  bind_rows_list(res_list)
 }

@@ -31,30 +31,19 @@ A data frame summarizing coefficients, standard errors, and p-values.
 }
 \description{
 \code{build_model()} fits gene- or region-level association models on the
-list of data.frames produced by \code{prepare_list()}. First, it checks that
-each table contains the requested outcome, dosage, and covariate columns
-and that all tables have the same number of rows; if required columns are
-missing or the sample size is too small, the function returns one row per
-variant with estimates set to \code{NA} and a short message in the \code{error}
-field. The phenotype, covariates, and per-variant dosage columns are then
-merged into a single modelling data set and a joint formula linking the
-outcome to all variants (and optional covariates) is constructed, with
-\code{na.omit} used to remove rows containing missing values. For
-\code{model = "linear"}, a standard linear model is fit with \code{stats::lm()}, and
-per-variant regression coefficients, standard errors, p-values and
-confidence intervals are extracted for each dosage column. For
-\code{model = "logistic"}, the function uses Firth-penalized logistic regression
-via \code{logistf::logistf()}: each variant is first screened in a univariate
-Firth model to detect non-convergence or unstable standard errors, and
-such variants are flagged, assigned \code{NA} estimates, and excluded from the
-joint analysis. A joint Firth model is then fit on the remaining stable
-variants; if the joint fit is still unstable, variants are removed one at
-a time until a stable model is obtained or no variants remain. For all
-variants retained in the final joint model, the function returns effect
-estimates, standard errors, Wald p-values and odds ratios (with confidence
-intervals on the odds-ratio scale), while variants that were dropped at
-any stage carry \code{NA} estimates and a short reason (≤ 10 words) in the
-\code{error} column.
+list of data.frames from \code{prepare_list()}. It merges phenotype, dosage,
+and optional covariates into a modeling dataset and automatically chooses
+between linear (\code{lm}) and Firth-penalized logistic (\code{logistf}) regression.
+
+For linear models, the function reports per-variant coefficients, standard
+errors, p-values, and confidence intervals. For logistic models, it first
+screens variants in univariate Firth regressions to remove non-convergent
+or unstable ones, then fits a joint model on the remaining variants and
+iteratively drops those causing instability.
+
+Results include beta, SE, p, CI, and odds ratios where applicable. Variants
+excluded due to missing columns, insufficient sample size, or model failure
+return \code{NA} estimates with a brief reason in the \code{error} column.
 }
 \details{
 build_model
