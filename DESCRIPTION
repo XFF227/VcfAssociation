@@ -24,10 +24,10 @@ Imports:
     readr,
     stats,
     tools,
+Suggests:
     testthat (>= 3.0.0),
     knitr,
     rmarkdown
-Suggests:
 SystemRequirements: Rtools (for Windows, when installing from source)
 Config/testthat/edition: 3
 VignetteBuilder: knitr

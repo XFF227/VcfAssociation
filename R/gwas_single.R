@@ -68,8 +68,7 @@ gwas_single <- function(ph,
   fml <- stats::as.formula(paste(pheno_col, "~", paste(rhs, collapse = " + ")))
   
   if (!requireNamespace("dplyr", quietly = TRUE)) stop("Please install.packages('dplyr')")
-  if (!requireNamespace("purrr", quietly = TRUE)) stop("Please install.packages('purrr')")
-  
+
   dplyr::group_by(merged, .data$CHROM, .data$POS) |>
     dplyr::group_modify(~{
       df <- .x

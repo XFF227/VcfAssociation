@@ -27,6 +27,13 @@ devtools::install_github("XFF227/VcfAssociation", build_vignettes = TRUE)
 library(VcfAssociation)
 ```
 
+To run the shiny app:
+
+``` r
+library(VcfAssociation)
+runVcfAssociation()
+```
+
 ## Overview
 
 The package provides end-to-end analysis from reading a VCF file to

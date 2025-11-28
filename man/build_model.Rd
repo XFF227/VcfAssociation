@@ -9,7 +9,8 @@ build_model(
   outcomes,
   dosage = "Dosage",
   covars = character(),
-  model = c("logistic", "linear")
+  model = c("logistic", "linear"),
+  maxit = 50
 )
 }
 \arguments{
@@ -22,43 +23,39 @@ build_model(
 \item{covars}{Optional covariate names.}
 
 \item{model}{Either "logistic" or "linear".}
+
+\item{maxit}{Maximum iterations for Firth logistic (default 50).}
 }
 \value{
 A data frame summarizing coefficients, standard errors, and p-values.
 }
 \description{
-This function performs multi-variant modeling using data prepared by
-prepare_list(). It fits linear or logistic (Firth) regression models that link
-phenotype to one or more genotype dosages and optional covariates.
-It is used to identify the joint effect of variants within a locus or gene.
+\code{build_model()} fits gene- or region-level association models on the
+list of data.frames produced by \code{prepare_list()}. First, it checks that
+each table contains the requested outcome, dosage, and covariate columns
+and that all tables have the same number of rows; if required columns are
+missing or the sample size is too small, the function returns one row per
+variant with estimates set to \code{NA} and a short message in the \code{error}
+field. The phenotype, covariates, and per-variant dosage columns are then
+merged into a single modelling data set and a joint formula linking the
+outcome to all variants (and optional covariates) is constructed, with
+\code{na.omit} used to remove rows containing missing values. For
+\code{model = "linear"}, a standard linear model is fit with \code{stats::lm()}, and
+per-variant regression coefficients, standard errors, p-values and
+confidence intervals are extracted for each dosage column. For
+\code{model = "logistic"}, the function uses Firth-penalized logistic regression
+via \code{logistf::logistf()}: each variant is first screened in a univariate
+Firth model to detect non-convergence or unstable standard errors, and
+such variants are flagged, assigned \code{NA} estimates, and excluded from the
+joint analysis. A joint Firth model is then fit on the remaining stable
+variants; if the joint fit is still unstable, variants are removed one at
+a time until a stable model is obtained or no variants remain. For all
+variants retained in the final joint model, the function returns effect
+estimates, standard errors, Wald p-values and odds ratios (with confidence
+intervals on the odds-ratio scale), while variants that were dropped at
+any stage carry \code{NA} estimates and a short reason (≤ 10 words) in the
+\code{error} column.
 }
 \details{
 build_model
-}
-\examples{
-vcf_path <- system.file("extdata", "toy.vcf",
-                        package = "VcfAssociation", mustWork = TRUE)
-vcf <- read_vcf(vcf_path)
-ph <- generate_phenotype(vcf_path,
-                         chrom = "chr12", pos = 11161,
-                         model = "carrier")
-tmp <- tempfile(fileext = ".csv")
-write.csv(ph, tmp, row.names = FALSE)
-ph_list <- read_phenotypes(tmp, id_col = "sample", genotypes = vcf$genotypes)
-variants <- data.frame(CHROM = "chr12", POS = c(10537, 12180, 12372))
-df_list <- prepare_list(ph_list, variants, phenotypes = "phenotype")
-res <- build_model(df_list, outcomes = "phenotype", model = "logistic")
-head(res)
-}
-\references{
-\strong{stats}: R Core Team. (2025). \emph{R: A Language and Environment for Statistical Computing.}
-R Foundation for Statistical Computing, Vienna, Austria.
-\url{https://www.R-project.org/}
-
-\strong{dplyr}: Wickham, H., François, R., Henry, L., & Müller, K. (2023).
-\emph{dplyr: A Grammar of Data Manipulation.} R package version 1.x.
-\url{https://CRAN.R-project.org/package=dplyr}
-}
-\seealso{
-forest_plot
 }

@@ -1,4 +1,5 @@
 library(shiny)
+library(DT)
 library(VcfAssociation)
 
 ui <- fluidPage(
@@ -31,43 +32,68 @@ ui <- fluidPage(
       )
     ),
     mainPanel(
-      h4("2. Variant and phenotype selection"),
+      h4("2. Load data and run GWAS"),
       helpText(
-        "Example: phenotype column = 'phenotype'. ",
-        "Click \"Load variant options\" to scan the VCF and list available variants, ",
-        "then choose one or more variants from the dropdown. ",
-        "The model will fit all selected variants jointly (multivariable regression)."
+        "Specify the phenotype column and click the button to load data ",
+        "and run single-variant association using gwas_single()."
       ),
       textInput("phenoColInput", "Phenotype column", value = "phenotype"),
-      actionButton("loadBtn", "Load variant options and run GWAS"),
+      actionButton("loadBtn", "Load data and run GWAS"),
       br(), br(),
+      tabsetPanel(
+        id = "gwasTabs",
+        tabPanel(
+          "GWAS results table",
+          DTOutput("gwasTable")
+        ),
+        tabPanel(
+          "GWAS Manhattan plot",
+          plotOutput("manhattanPlot"),
+          tags$div(
+            "Figure 1. Manhattan plot showing −log₁₀(P) values across chromosomes.The red line indicates the genome-wide significance threshold",
+            style = "text-align:center; font-style:italic; color:#555; margin-top:20px;"
+          ))
+      ),
+      br(), br(),
+      h4("3. Joint model for selected variants"),
+      helpText(
+        "After GWAS finishes, select one or more variants (CHROM:POS) ",
+        "and run a joint model (multivariable regression)."
+      ),
       selectizeInput(
         "variantSelect",
         "Select variants of interest (CHROM:POS):",
         choices  = NULL,
         multiple = TRUE,
-        options  = list(maxItems = 20, placeholder = "Click above after loading variants")
+        options  = list(maxItems = 20, placeholder = "Run GWAS first.")
       ),
-      actionButton("runBtn", "Run joint model"),
+      actionButton("runJointBtn", "Run joint model"),
       br(), br(),
-      h4("3. GWAS Manhattan plot"),
-      helpText("The Manhattan plot is based on gwas_single results over all variants."),
       tabsetPanel(
-        tabPanel("Model results (joint model)", tableOutput("resultTable")),
-        tabPanel("Forest plot (joint model)", plotOutput("forestPlot")),
-        tabPanel("Manhattan plot (gwas_single)", plotOutput("manhattanPlot"))
+        id = "jointTabs",
+        tabPanel(
+          "Joint model results table",
+          DTOutput("jointTable")
+        ),
+        tabPanel(
+          "Joint model forest plot",
+          plotOutput("forestPlot"),
+          tags$div(
+            "Figure 2. Forest plot showing estimated effects (β or log(OR)) and 95% confidence intervals for selected variants. Variants labelled “Firth failed” showed non-convergence or separation in Firth logistic regression, and were therefore excluded from the joint model",
+            style = "text-align:center; font-style:italic; color:#555; margin-top:20px;"
+          ))
       )
     )
   )
 )
 
 server <- function(input, output, session) {
-
+  
   rv <- reactiveValues(
     ph_list = NULL,
     res_df  = NULL
   )
-
+  
   get_pheno_col <- reactive({
     if (is.null(input$phenoColInput) || input$phenoColInput == "") {
       "phenotype"
@@ -75,10 +101,10 @@ server <- function(input, output, session) {
       input$phenoColInput
     }
   })
-
+  
   observeEvent(input$loadBtn, {
     pheno_col <- get_pheno_col()
-
+    
     if (identical(input$dataSource, "upload")) {
       vcf_path <- if (!is.null(input$vcfFile)) {
         input$vcfFile$datapath
@@ -87,7 +113,7 @@ server <- function(input, output, session) {
                     package = "VcfAssociation",
                     mustWork = TRUE)
       }
-
+      
       pheno_path <- if (!is.null(input$phenoFile)) {
         input$phenoFile$datapath
       } else {
@@ -101,7 +127,7 @@ server <- function(input, output, session) {
         write.csv(pheno_df, tmp, row.names = FALSE)
         tmp
       }
-
+      
     } else {
       vcf_path <- system.file("extdata", "toy.vcf",
                               package = "VcfAssociation",
@@ -115,29 +141,43 @@ server <- function(input, output, session) {
       pheno_path <- tempfile(fileext = ".csv")
       write.csv(pheno_df, pheno_path, row.names = FALSE)
     }
-
+    
     vcf <- read_vcf(vcf_path)
     geno_data <- vcf$genotypes
-
+    
     ph_list <- read_phenotypes(
       pheno_path,
       id_col    = "sample",
       genotypes = geno_data
     )
-
+    
     res_df <- gwas_single(
       ph_list,
       pheno_col = pheno_col
     )
-
+    
     rv$ph_list <- ph_list
     rv$res_df  <- res_df
-
+    
+    output$gwasTable <- DT::renderDT({
+      if (is.null(res_df) || nrow(res_df) == 0L) return(NULL)
+      res_df
+    },
+    options = list(
+      pageLength = 10,
+      lengthMenu = c(10, 20, 50, 100)
+    ))
+    
+    output$manhattanPlot <- renderPlot({
+      if (is.null(res_df) || nrow(res_df) == 0L) return(NULL)
+      manhattan_plot(res_df)
+    })
+    
     if (!is.null(res_df) && nrow(res_df) > 0L) {
       ordered <- res_df[order(res_df$p), ]
       labels  <- paste0(ordered$CHROM, ":", ordered$POS)
       names(labels) <- labels
-
+      
       updateSelectizeInput(
         session,
         "variantSelect",
@@ -154,42 +194,41 @@ server <- function(input, output, session) {
       )
     }
   })
-
-  observeEvent(input$runBtn, {
+  
+  observeEvent(input$runJointBtn, {
     pheno_col <- get_pheno_col()
     ph_list   <- rv$ph_list
     res_df    <- rv$res_df
     selected  <- input$variantSelect
-
+    
     if (is.null(ph_list) || is.null(res_df) || length(selected) == 0L) {
-      output$resultTable <- renderTable(NULL)
+      output$jointTable  <- DT::renderDT(NULL)
       output$forestPlot  <- renderPlot(NULL)
-      output$manhattanPlot <- renderPlot(NULL)
       return(NULL)
     }
-
+    
     split_vals <- strsplit(selected, ":", fixed = TRUE)
     chroms     <- vapply(split_vals, `[`, character(1L), 1L)
     poses_chr  <- vapply(split_vals, `[`, character(1L), 2L)
     poses      <- suppressWarnings(as.numeric(poses_chr))
-
+    
     variant_df <- data.frame(
       CHROM = chroms,
       POS   = poses,
       stringsAsFactors = FALSE
     )
-
+    
     df_list <- prepare_list(
       ph_list,
       variants   = variant_df,
       phenotypes = pheno_col
     )
-
+    
     merged_df <- ph_list$merged
     y <- merged_df[[pheno_col]]
     uniq_y <- unique(stats::na.omit(y))
     model_type <- if (length(uniq_y) == 2L) "logistic" else "linear"
-
+    
     variant_result <- build_model(
       df_list  = df_list,
       outcomes = pheno_col,
@@ -197,19 +236,17 @@ server <- function(input, output, session) {
       covars   = character(),
       model    = model_type
     )
-
-    output$resultTable <- renderTable({
+    
+    output$jointTable <- DT::renderDT({
       variant_result
-    })
-
+    },
+    options = list(
+      pageLength = 10,
+      lengthMenu = c(10, 20, 50, 100)
+    ))
+    
     output$forestPlot <- renderPlot({
       forest_plot(variant_result)
-    })
-
-    output$manhattanPlot <- renderPlot({
-      res_df <- rv$res_df
-      if (is.null(res_df) || nrow(res_df) == 0L) return(NULL)
-      manhattan_plot(res_df)
     })
   })
 }
