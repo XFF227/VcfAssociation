@@ -59,10 +59,6 @@ ph_add <- generate_phenotype(vcf_path,
 head(ph_add)
 }
 \references{
-\strong{dplyr}: Wickham, H., François, R., Henry, L., & Müller, K. (2023).
-\emph{dplyr: A Grammar of Data Manipulation.} R package version 1.x.
-\url{https://CRAN.R-project.org/package=dplyr}
-
 \strong{stats}: R Core Team. (2025). \emph{R: A Language and Environment for Statistical Computing.}
 R Foundation for Statistical Computing, Vienna, Austria.
 \url{https://www.R-project.org/}

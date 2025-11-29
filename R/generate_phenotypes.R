@@ -18,7 +18,8 @@
 #' @param sample_col Name of the sample ID column in the output.
 #'
 #' @return A data frame with sample IDs and phenotype values.
-#'
+#' @importFrom stats setNames
+#' @importFrom readr write_csv
 #' @examples
 #' vcf_path <- system.file("extdata", "toy.vcf",
 #'                         package = "VcfAssociation", mustWork = TRUE)
@@ -35,10 +36,6 @@
 #' head(ph_add)
 #' @seealso read_vcf, read_phenotypes
 #' @references
-#' **dplyr**: Wickham, H., François, R., Henry, L., & Müller, K. (2023).
-#'  *dplyr: A Grammar of Data Manipulation.* R package version 1.x.
-#'  <https://CRAN.R-project.org/package=dplyr>
-#'
 #' **stats**: R Core Team. (2025). *R: A Language and Environment for Statistical Computing.*
 #'  R Foundation for Statistical Computing, Vienna, Austria.
 #'  <https://www.R-project.org/>

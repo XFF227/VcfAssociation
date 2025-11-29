@@ -99,7 +99,8 @@ firth_fit_safe <- function(formula, data, maxit) {
 #' @param covars Optional covariate names.
 #' @param model Either "logistic" or "linear".
 #' @param maxit Maximum iterations for Firth logistic (default 50).
-#'
+#' @importFrom stats as.formula model.frame lm confint vcov coef pnorm qnorm
+#' @importFrom utils tail
 #' @return A data frame summarizing coefficients, standard errors, and p-values.
 #' @export
 build_model <- function(df_list,

@@ -15,6 +15,9 @@
 #' @param genotypes Optional genotype table from read_vcf().
 #' @param by Mapping of sample ID columns between phenotype and genotype tables.
 #'
+#' @importFrom readr read_csv read_tsv
+#' @importFrom dplyr left_join
+#' @importFrom tools file_ext
 #' @return A list containing:
 #' - merged: combined phenotype–genotype table.
 #' - gaps: unmatched sample IDs.

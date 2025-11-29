@@ -7,26 +7,58 @@
 gwas_single(ph, pheno_col = "phenotype", covars = NULL, id_col = "sample")
 }
 \arguments{
-\item{ph}{Merged data frame or list from read_phenotypes().}
+\item{ph}{A merged data frame or a list as returned by \code{\link[=read_phenotypes]{read_phenotypes()}}.
+If a list is supplied, the merged phenotype–genotype table is taken from
+the \verb{$merged} element.}
 
-\item{pheno_col}{Name of the phenotype column.}
+\item{pheno_col}{Character scalar giving the name of the phenotype column.
+Default is \code{"phenotype"}.}
 
-\item{covars}{Optional character vector of covariate names.}
+\item{covars}{Optional character vector of covariate column names. These
+columns must all be present in the merged table. If \code{NULL} (the default),
+only the dosage term is included in the model.}
 
-\item{id_col}{Sample ID column name.}
+\item{id_col}{Character scalar giving the sample ID column name. This is
+only used to validate that an ID column is present; the column itself is
+not included in the regression.}
 }
 \value{
-A data frame with CHROM, POS, beta, standard error, and p-value.
+A tibble with one row per variant and the following columns:
+
+\describe{
+\item{CHROM}{Chromosome.}
+\item{POS}{Base-pair position.}
+\item{REF}{Reference allele.}
+\item{ALT}{Alternate allele.}
+\item{beta}{Estimated regression coefficient for genotype dosage.}
+\item{se}{Standard error of \code{beta}.}
+\item{p}{Two-sided Wald p-value for \code{beta}.}
+}
+
+Variants for which the model cannot be fitted (for example because all
+phenotypes are missing, there is no variation in dosage, or the fit fails)
+receive \code{NA} in the \code{beta}, \code{se}, and \code{p} columns.
 }
 \description{
-This function runs the core GWAS step in the pipeline. Using the merged
-phenotype–genotype table from read_phenotypes(), it performs a regression
-test for each variant. The phenotype is modeled as a function of genotype
-dosage and optional covariates.
+\code{gwas_single()} runs a standard single-variant association scan on a merged
+phenotype–genotype table. Using the unified table produced by
+\code{\link[=read_phenotypes]{read_phenotypes()}}, it fits a separate regression model for each variant,
+with the phenotype as the outcome and genotype dosage as the main predictor.
+Optional covariates can be supplied and are included in every model.
 
-Binary phenotypes use logistic regression; continuous phenotypes use linear
-regression. The output includes per-variant effect size, standard error, and
-p-value, suitable for visualization with manhattan_plot().
+The regression family is chosen automatically from the phenotype column:
+\itemize{
+\item if the phenotype is numeric and takes only the values \code{0} and \code{1}
+(ignoring \code{NA}), or a two-level factor, a logistic regression is fitted
+with \code{stats::binomial()};
+\item otherwise a linear model is fitted with \code{stats::gaussian()}.
+}
+
+For each variant, the function extracts the coefficient of the dosage term
+(\code{beta}), its standard error (\code{se}), and the corresponding Wald p-value
+(\code{p}). The result is returned as a tidy data frame containing one row per
+variant, ordered by chromosome and position, and is suitable for downstream
+visualization with \code{\link[=manhattan_plot]{manhattan_plot()}}.
 }
 \details{
 gwas_single
@@ -43,9 +75,11 @@ write.csv(ph, tmp, row.names = FALSE)
 ph_list <- read_phenotypes(tmp, id_col = "sample", genotypes = vcf$genotypes)
 gwas_res <- gwas_single(ph_list, pheno_col = "phenotype")
 head(gwas_res)
+
 }
 \references{
-\strong{stats}: R Core Team. (2025). \emph{R: A Language and Environment for Statistical Computing.}
+\strong{stats}: R Core Team. (2025).
+\emph{R: A Language and Environment for Statistical Computing.}
 R Foundation for Statistical Computing, Vienna, Austria.
 \url{https://www.R-project.org/}
 
@@ -54,5 +88,5 @@ R Foundation for Statistical Computing, Vienna, Austria.
 \url{https://CRAN.R-project.org/package=dplyr}
 }
 \seealso{
-manhattan_plot
+\code{\link[=manhattan_plot]{manhattan_plot()}}
 }

@@ -22,7 +22,8 @@
 #' @param error_point_size Point size for invalid rows (default 3).
 #' @param error_label_size Text size for error messages (default 3.6).
 #' @param p_label_size Text size for p-value labels (default 3.6).
-#'
+#' @import ggplot2
+#' @importFrom dplyr as_tibble tibble group_by mutate ungroup
 #' @return A ggplot object showing the forest plot.
 #' @seealso build_model
 #' @export

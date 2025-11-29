@@ -14,6 +14,7 @@
 #' @param samples Optional character vector of sample IDs to retain.
 #' @param genome Optional genome build name (not used internally, kept for compatibility).
 #'
+#' @importFrom vcfR read.vcfR extract.gt
 #' @return A list containing:
 #' - variants: data frame with CHROM, POS, REF, and ALT.
 #' - genotypes: long-format data frame with per-sample Dosage values.

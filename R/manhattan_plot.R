@@ -27,6 +27,9 @@
 #' @param genome_line_size Line width for genome-wide threshold (default 1).
 #' @param label_size Font size for annotated SNP labels (default 4).
 #'
+#' @import ggplot2
+#' @importFrom dplyr as_tibble group_by mutate ungroup distinct arrange pull summarise n left_join
+#' @importFrom stats setNames
 #' @return A ggplot object representing the Manhattan plot.
 #' @export
 manhattan_plot <- function(df,

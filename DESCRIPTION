@@ -17,7 +17,6 @@ RoxygenNote: 7.3.3
 Depends: R (>= 4.3)
 Imports:
     shiny,
-    DT,
     logistf,
     vcfR,
     dplyr,
@@ -27,6 +26,7 @@ Imports:
     tools,
 Suggests:
     testthat (>= 3.0.0),
+    DT,
     knitr,
     rmarkdown
 SystemRequirements: Rtools (for Windows, when installing from source)
