@@ -51,6 +51,7 @@ manhattan_plot <- function(df,
                            suggestive_line_size = 0.8,
                            genome_line_size     = 1,
                            label_size           = 4) {
+  chr_len <- offset <- NULL
   if (!requireNamespace("dplyr", quietly = TRUE)) stop("Please install.packages('dplyr')")
   if (!requireNamespace("ggplot2", quietly = TRUE)) stop("Please install.packages('ggplot2')")
   
